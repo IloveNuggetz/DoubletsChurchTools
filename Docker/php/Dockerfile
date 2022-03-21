@@ -21,3 +21,4 @@ RUN ls
 RUN symfony check:requirements
 
 RUN chmod 777 . -R
+
