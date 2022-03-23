@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * MessengerMessages
+ * MessengerMessages.
  *
  * @ORM\Table(name="messenger_messages", indexes={@ORM\Index(name="IDX_75EA56E016BA31DB", columns={"delivered_at"})})
  * @ORM\Entity
@@ -139,6 +139,4 @@ class MessengerMessages
 
         return $this;
     }
-
-
 }

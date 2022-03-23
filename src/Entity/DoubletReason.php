@@ -4,7 +4,6 @@ namespace App\Entity;
 
 class DoubletReason
 {
-
     private $rulingElaboration;
     private $ruleCode;
     private $additional;
@@ -45,10 +44,9 @@ class DoubletReason
         return $this;
     }
 
-    function __construct(string $rulingElaboration, int $ruleCode) {
-
+    public function __construct(string $rulingElaboration, int $ruleCode)
+    {
         $this->rulingElaboration = $rulingElaboration;
         $this->ruleCode = $ruleCode;
     }
-
 }

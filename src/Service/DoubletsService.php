@@ -1,157 +1,138 @@
 <?php
+
 namespace App\Service;
 
 use App\Entity\CdbPerson;
-use App\Repository\CdbPersonRepository;
 use App\Repository\CdbGemeindepersonRepository;
-use App\Service\DataNormalizationService;
-use App\Service\DoubletsService;
-
+use App\Repository\CdbPersonRepository;
 use Doctrine\ORM\EntityManagerInterface;
-
 use Psr\Log\LoggerInterface;
 
 class DoubletsService
 {
-        private $gemeindepersonRepo;
-        private $personRepo;
-        private $dns;
-        private $logger;
-        private $em;
+    private $gemeindepersonRepo;
+    private $personRepo;
+    private $dns;
+    private $logger;
+    private $em;
 
-        public function __construct(CdbGemeindepersonRepository $gemeindepersonRepo, CdbPersonRepository $personRepo, DataNormalizationService $dns, LoggerInterface $logger, EntityManagerInterface $em)
-        {
-               $this->gemeindepersonRepo = $gemeindepersonRepo;
-               $this->personRepo = $personRepo;
-               $this->dns = $dns;
-               $this->logger = $logger;
-               $this->em = $em;
-        }
+    public function __construct(CdbGemeindepersonRepository $gemeindepersonRepo, CdbPersonRepository $personRepo, DataNormalizationService $dns, LoggerInterface $logger, EntityManagerInterface $em)
+    {
+        $this->gemeindepersonRepo = $gemeindepersonRepo;
+        $this->personRepo = $personRepo;
+        $this->dns = $dns;
+        $this->logger = $logger;
+        $this->em = $em;
+    }
 
+    public function getExistingDoublets()
+    {
+        //TODO: only re-search doublets if DB has changed
 
-        public function getExistingDoublets()
-        {
+        $logger = $this->logger;
+        $gemeindepersonRepo = $this->gemeindepersonRepo;
+        $personRepo = $this->personRepo;
+        $dns = $this->dns;
 
-            #only re-search doublets if DB has changed
+        $gemeindepersons = $gemeindepersonRepo->findAll();
 
-            $logger = $this->logger;
-            $gemeindepersonRepo = $this->gemeindepersonRepo;
-            $personRepo = $this->personRepo;
-            $dns = $this->dns;
+        $logger->info(count($gemeindepersons));
 
-            $gemeindepersons = $gemeindepersonRepo->findAll();
+        //Gleiche für alle Personen nicht nur gemeindepersonen
+        $this->normalizeGemeindepersons($gemeindepersons, $logger, $dns);
 
-            $logger->info(count($gemeindepersons));
+        $map = [];
 
-            #Gleiche für alle Personen nicht nur gemeindepersonen
-            $this->normalizeGemeindepersons($gemeindepersons, $logger, $dns);
+        for ($i = 0; $i < count($gemeindepersons); ++$i) {
+            $person = $gemeindepersons[$i]->getPerson();
+            $strasse = $person->getStrasse();
+            //$logger->info($i);
 
-            $map = array();
+            if (!is_null($strasse)) {
+                $id = $person->getId();
 
-            for($i = 0; $i < count($gemeindepersons); $i++) {
-                $person = $gemeindepersons[$i]->getPerson();
-                $strasse = $person->getStrasse();
-                #$logger->info($i);
-
-                if(!is_null($strasse)) {
-
-                    $id = $person->getId();
-
-                    if(!array_key_exists($strasse,$map)) {
-                        $map[$strasse] = array($id);
-                    }
-                    else {
-                        if(in_array($id, $map[$strasse])) {
-                            $logger->info($strasse);
-                            $logger->info("got it");
-                         }
-
-                        array_push($map[$strasse], $id);
-
+                if (!array_key_exists($strasse, $map)) {
+                    $map[$strasse] = [$id];
+                } else {
+                    if (in_array($id, $map[$strasse])) {
+                        $logger->info($strasse);
+                        $logger->info('got it');
                     }
 
+                    array_push($map[$strasse], $id);
                 }
-
             }
-
-            return $map;
-
-
         }
 
-        function normalizeGemeindepersons($gemeindepersons, $logger, $dns) {
-            $specialChars = array();
+        return $map;
+    }
 
-            foreach($gemeindepersons as $gemeindeperson) {
+    public function normalizeGemeindepersons($gemeindepersons, $logger, $dns)
+    {
+        $specialChars = [];
 
+        foreach ($gemeindepersons as $gemeindeperson) {
+            $strasse = $gemeindeperson->getPerson()->getStrasse();
+            $strasse = $dns->normalizeCharacters($strasse, $logger);
+            $strasse = $dns->normalizeLexical($strasse, $logger);
 
-                $strasse = $gemeindeperson->getPerson()->getStrasse();
-                $strasse = $dns->normalizeCharacters($strasse, $logger);
-                $strasse = $dns->normalizeLexical($strasse, $logger);
+            $gemeindeperson->getPerson()->setStrasse($strasse);
 
-                $gemeindeperson->getPerson()->setStrasse($strasse);
-
-                /*
-                $str = $gemeindeperson->getPerson()->getName();
-                $specialChars = $this->normalizeCharacters($str, $logger);
-
-
-                $str = $gemeindeperson->getPerson()->getVorname();
-                $specialChars = $this->cv_input($str, $logger, $specialChars);
-
-                $str = $gemeindeperson->getBeruf();
-                $specialChars = $this->cv_input($str, $logger, $specialChars);
-
-                $str = $gemeindeperson->getPerson()->getTitel();
-                $specialChars = $this->cv_input($str, $logger, $specialChars);
-
-                $str = $gemeindeperson->getPerson()->getOrt();
-                $specialChars = $this->cv_input($str, $logger, $specialChars);
-
-                $str = $gemeindeperson->getPerson()->getLand();
-                $specialChars = $this->cv_input($str, $logger, $specialChars);
-
-                $str = $gemeindeperson->getPerson()->getEmail();
-                $specialChars = $this->cv_input($str, $logger, $specialChars);
-                */
+            /*
+            $str = $gemeindeperson->getPerson()->getName();
+            $specialChars = $this->normalizeCharacters($str, $logger);
 
 
-            }
+            $str = $gemeindeperson->getPerson()->getVorname();
+            $specialChars = $this->cv_input($str, $logger, $specialChars);
 
-            return $gemeindepersons;
+            $str = $gemeindeperson->getBeruf();
+            $specialChars = $this->cv_input($str, $logger, $specialChars);
 
+            $str = $gemeindeperson->getPerson()->getTitel();
+            $specialChars = $this->cv_input($str, $logger, $specialChars);
+
+            $str = $gemeindeperson->getPerson()->getOrt();
+            $specialChars = $this->cv_input($str, $logger, $specialChars);
+
+            $str = $gemeindeperson->getPerson()->getLand();
+            $specialChars = $this->cv_input($str, $logger, $specialChars);
+
+            $str = $gemeindeperson->getPerson()->getEmail();
+            $specialChars = $this->cv_input($str, $logger, $specialChars);
+            */
         }
+
+        return $gemeindepersons;
+    }
 
     public function mergePersons($mergeRequestArray): CdbPerson
     {
-                    $personRepo = $this->personRepo;
-                    $em = $this->em;
+        $personRepo = $this->personRepo;
+        $em = $this->em;
 
-                    #Check if ids are valid for merge
-                    $validForMerge = true;
+        //Check if ids are valid for merge
+        $validForMerge = true;
 
+        if (!$validForMerge) {
+            throw $this->createNotFoundException('The given ids are not applicable for merging!');
+        }
 
-                    if (!$validForMerge) {
-                            throw $this->createNotFoundException('The given ids are not applicable for merging!');
-                    }
+        $newFusionedEntity = new CdbPerson();
+        $newFusionedEntity->setName('George');
 
+        $person = $personRepo->findOneBy(['id' => $mergeRequestArray['firstId']]);
+        $person2 = $personRepo->findOneBy(['id' => $mergeRequestArray['secondId']]);
 
-                    $newFusionedEntity = new CdbPerson();
-                    $newFusionedEntity->setName('George');
+        /*
+        $em->transactional(function($em) {
+            $em->remove($person);
+            $em->remove($person2);
 
-                    $person = $personRepo->findOneBy(array('id' => $mergeRequestArray['firstId']));
-                    $person2 = $personRepo->findOneBy(array('id' => $mergeRequestArray['secondId']));
+            $em->persist($newFusionedEntity);
+        });
+        */
 
-                    /*
-                    $em->transactional(function($em) {
-                        $em->remove($person);
-                        $em->remove($person2);
-
-                        $em->persist($newFusionedEntity);
-                    });
-                    */
-
-                    return $newFusionedEntity;
-
+        return $newFusionedEntity;
     }
 }

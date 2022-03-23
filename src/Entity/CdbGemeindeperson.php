@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * CdbGemeindeperson
+ * CdbGemeindeperson.
  *
  * @ORM\Table(name="cdb_gemeindeperson", indexes={@ORM\Index(name="status_id", columns={"status_id"}), @ORM\Index(name="station_id", columns={"station_id"}), @ORM\Index(name="person_id", columns={"person_id"})})
  * @ORM\Entity(repositoryClass="App\Repository\CdbGemeindepersonRepository")
@@ -547,6 +547,4 @@ class CdbGemeindeperson
 
         return $this;
     }
-
-
 }

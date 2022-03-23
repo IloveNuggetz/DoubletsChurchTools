@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * CdbPerson
+ * CdbPerson.
  *
  * @ORM\Table(name="cdb_person", uniqueConstraints={@ORM\UniqueConstraint(name="guid", columns={"guid"})})
  * @ORM\Entity(repositoryClass="App\Repository\CdbPersonRepository")
@@ -728,6 +728,4 @@ class CdbPerson
 
         return $this;
     }
-
-
 }

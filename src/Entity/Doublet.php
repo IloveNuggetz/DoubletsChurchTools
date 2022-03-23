@@ -2,15 +2,8 @@
 
 namespace App\Entity;
 
-use App\Entity\CdbPerson;
-use App\Entity\DoubletReason;
-
-use OpenApi\Annotations as OA;
-
-
 class Doublet
 {
-
     private $firstPerson;
     private $secondPerson;
     private $reason;
@@ -51,11 +44,10 @@ class Doublet
         return $this;
     }
 
-    function __construct(CdbPerson $firstPerson, CdbPerson $secondPerson, DoubletReason $reason) {
-
+    public function __construct(CdbPerson $firstPerson, CdbPerson $secondPerson, DoubletReason $reason)
+    {
         $this->firstPerson = $firstPerson;
         $this->secondPerson = $secondPerson;
         $this->reason = $reason;
     }
-
 }

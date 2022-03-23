@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * CdbStatus
+ * CdbStatus.
  *
  * @ORM\Table(name="cdb_status")
  * @ORM\Entity(repositoryClass="App\Repository\CdbStatusRepository")
@@ -139,6 +139,4 @@ class CdbStatus
 
         return $this;
     }
-
-
 }
