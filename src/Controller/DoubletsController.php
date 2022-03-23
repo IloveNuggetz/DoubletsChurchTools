@@ -2,17 +2,13 @@
 
 namespace App\Controller;
 
-use App\Entity\CdbPerson;
-use App\Repository\CdbPersonRepository;
-use App\Repository\CdbGemeindepersonRepository;
+use App\Service\DoubletsService;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-
-use Doctrine\ORM\EntityManagerInterface;
 
 use Psr\Log\LoggerInterface;
 
@@ -22,17 +18,13 @@ use OpenApi\Annotations as OA;
 
 class DoubletsController extends AbstractController
 {
-    private $gemeindepersonRepo;
-    private $personRepo;
     private $logger;
-    private $em;
+    private $ds;
 
-    public function __construct(CdbGemeindepersonRepository $gemeindepersonRepo, CdbPersonRepository $personRepo, LoggerInterface $logger, EntityManagerInterface $em)
+    public function __construct(LoggerInterface $logger, DoubletsService $ds)
     {
-           $this->gemeindepersonRepo = $gemeindepersonRepo;
-           $this->personRepo = $personRepo;
            $this->logger = $logger;
-           $this->em = $em;
+           $this->ds = $ds;
     }
 
     /**
@@ -51,57 +43,17 @@ class DoubletsController extends AbstractController
 
     public function list(): Response
     {
-        #hash map to define and save doublets
-        #maybe doublets class or lists as hashbuckets
-        #only re-search doublets if DB has changed
+        $ds = $this->ds;
 
-        $logger = $this->logger;
-        $gemeindepersonRepo = $this->gemeindepersonRepo;
-        $personRepo = $this->personRepo;
-
-        $gemeindepersons = $gemeindepersonRepo->findAll();
-
-        $logger->info(count($gemeindepersons));
-
-        $map = array();
-
-
-        for($i = 0; $i < count($gemeindepersons); $i++) {
-            $logger->info($i);
-
-            $personImg = $gemeindepersons[$i]->getImageurl();
-
-            if(!is_null($personImg)) {
-                $person = $gemeindepersons[$i]->getPerson();
-                $name = $person->getName();
-                $strasse = $person->getStrasse();
-
-
-                if(!array_key_exists($personImg,$map)) {
-                    $map[$personImg] = array($strasse);
-                }
-                else {
-                    if(in_array($strasse, $map[$personImg])) {
-                        $logger->info($personImg);
-                        $logger->info("got it");
-                     }
-
-                    array_push($map[$personImg], $strasse);
-
-                }
-
-            }
-
-        }
-
-
-
+        $doublets = $ds->getExistingDoublets();
 
         $serializer = $this->container->get('serializer');
-        $reports = $serializer->serialize($gemeindepersons, 'json');
+        $reports = $serializer->serialize($doublets, 'json');
 
-        return new Response(json_encode($map));
+        return new Response(json_encode($doublets));
     }
+
+
 
 
 
@@ -138,49 +90,25 @@ class DoubletsController extends AbstractController
          */
         public function merge(Request $request): Response
         {
-        #hash map to define and save doublets
-        #maybe doublets class or lists as hashbuckets
-        #only re-search doublets if DB has changed
+
 
             $logger = $this->logger;
-            $gemeindepersonRepo = $this->gemeindepersonRepo;
-            $personRepo = $this->personRepo;
-            $em = $this->em;
+            $ds = $this->ds;
+
 
             $logger->info($request->getContent());
 
+            #http stuff
             $varPost = json_decode($request->getContent(), true);
-
 
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new BadRequestHttpException('Invalid request body: ' . json_last_error_msg());
             }
 
-
             $logger->info($varPost['firstId']);
             $logger->info($varPost['secondId']);
 
-            #Check if ids are valid for merge
-            $validForMerge = true;
-
-
-            if (!$validForMerge) {
-                    throw $this->createNotFoundException('The given ids are not applicable for merging!');
-            }
-
-
-            $newFusionedEntity = new CdbPerson();
-            $newFusionedEntity->setName('George');
-
-            $entity = $personRepo->findOneBy(array('id' => $varPost['firstId']));
-            $entity2 = $personRepo->findOneBy(array('id' => $varPost['secondId']));
-
-            $em->transactional(function($em) {
-                $em->remove($firstUser);
-                $em->remove($secondUser);
-
-                $em->persist($newFusionedEntity);
-            });
+            $newFusionedEntity = $ds->mergePersons($varPost);
 
 
 
