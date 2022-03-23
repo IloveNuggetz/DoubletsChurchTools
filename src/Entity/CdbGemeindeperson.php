@@ -547,4 +547,16 @@ class CdbGemeindeperson
 
         return $this;
     }
+
+    public function getObjectVars()
+    {
+        return get_object_vars($this);
+    }
+
+    public function setObjectVars($objectVarsMap)
+    {
+        foreach ($objectVarsMap as $objectVar => $objectVarVal) {
+            $this->{$objectVar} = $objectVarVal;
+        }
+    }
 }

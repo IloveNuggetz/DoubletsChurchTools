@@ -13,14 +13,16 @@ class DoubletsService
     private $gemeindepersonRepo;
     private $personRepo;
     private $dns;
+    private $ddds;
     private $logger;
     private $em;
 
-    public function __construct(CdbGemeindepersonRepository $gemeindepersonRepo, CdbPersonRepository $personRepo, DataNormalizationService $dns, LoggerInterface $logger, EntityManagerInterface $em)
+    public function __construct(CdbGemeindepersonRepository $gemeindepersonRepo, CdbPersonRepository $personRepo, DataNormalizationService $dns, DataDoubletDetectorService $ddds, LoggerInterface $logger, EntityManagerInterface $em)
     {
         $this->gemeindepersonRepo = $gemeindepersonRepo;
         $this->personRepo = $personRepo;
         $this->dns = $dns;
+        $this->ddds = $ddds;
         $this->logger = $logger;
         $this->em = $em;
     }
@@ -33,13 +35,25 @@ class DoubletsService
         $gemeindepersonRepo = $this->gemeindepersonRepo;
         $personRepo = $this->personRepo;
         $dns = $this->dns;
+        $ddds = $this->ddds;
 
+        //Only compare person - person | gemeindeperson - gemeindeperson
+        $persons = $personRepo->findAll();
         $gemeindepersons = $gemeindepersonRepo->findAll();
 
         $logger->info(count($gemeindepersons));
+        $logger->info(count($persons));
 
-        //Gleiche für alle Personen nicht nur gemeindepersonen
-        $this->normalizeGemeindepersons($gemeindepersons, $logger, $dns);
+        foreach ($gemeindepersons as $gemeindeperson) {
+            $gemeindeperson = $this->normalizeGemeindeperson($gemeindeperson, $logger, $dns);
+        }
+
+        foreach ($persons as $person) {
+            $person = $this->normalizePerson($person, $logger, $dns);
+        }
+
+        $gemeindepersonDoublets = $this->ddds->detectDoublets($gemeindeperson, 'graceful');
+        $personDoublets = $this->ddds->detectDoublets($person, 'graceful');
 
         $map = [];
 
@@ -67,43 +81,43 @@ class DoubletsService
         return $map;
     }
 
-    public function normalizeGemeindepersons($gemeindepersons, $logger, $dns)
+    public function normalizeGemeindeperson($gemeindeperson, $logger, $dns)
     {
-        $specialChars = [];
+        $gemeindeperson = $this->normalizeStrings($gemeindeperson, $logger, $dns);
 
-        foreach ($gemeindepersons as $gemeindeperson) {
-            $strasse = $gemeindeperson->getPerson()->getStrasse();
-            $strasse = $dns->normalizeCharacters($strasse, $logger);
-            $strasse = $dns->normalizeLexical($strasse, $logger);
+        $person = $gemeindeperson->getPerson();
+        $person = $this->normalizePerson($person, $logger, $dns);
+        $gemeindeperson->setPerson($person);
 
-            $gemeindeperson->getPerson()->setStrasse($strasse);
+        return $gemeindeperson;
+    }
 
-            /*
-            $str = $gemeindeperson->getPerson()->getName();
-            $specialChars = $this->normalizeCharacters($str, $logger);
+    public function normalizePerson($person, $logger, $dns)
+    {
+        $person = $this->normalizeStrings($person, $logger, $dns);
 
+        $strasse = $person->getStrasse();
+        $strasse = $dns->normalizeLexical($strasse, $logger);
+        $person->setStrasse($strasse);
 
-            $str = $gemeindeperson->getPerson()->getVorname();
-            $specialChars = $this->cv_input($str, $logger, $specialChars);
+        return $person;
+    }
 
-            $str = $gemeindeperson->getBeruf();
-            $specialChars = $this->cv_input($str, $logger, $specialChars);
+    //This function needs an interface for object, to ensure that getObjectVars and set are available
+    public function normalizeStrings($object, $logger, $dns)
+    {
+        $objectVarsMap = $object->getObjectVars();
 
-            $str = $gemeindeperson->getPerson()->getTitel();
-            $specialChars = $this->cv_input($str, $logger, $specialChars);
-
-            $str = $gemeindeperson->getPerson()->getOrt();
-            $specialChars = $this->cv_input($str, $logger, $specialChars);
-
-            $str = $gemeindeperson->getPerson()->getLand();
-            $specialChars = $this->cv_input($str, $logger, $specialChars);
-
-            $str = $gemeindeperson->getPerson()->getEmail();
-            $specialChars = $this->cv_input($str, $logger, $specialChars);
-            */
+        foreach ($objectVarsMap as $objectVar => $objectVarVal) {
+            if (is_string($objectVarVal)) {
+                $objectVarVal = $dns->normalizeCharacters($objectVarVal, $logger);
+                $objectVarsMap[$objectVar] = $objectVarVal;
+            }
         }
 
-        return $gemeindepersons;
+        $object->setObjectVars($objectVarsMap);
+
+        return $object;
     }
 
     public function mergePersons($mergeRequestArray): CdbPerson
