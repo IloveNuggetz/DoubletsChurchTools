@@ -2,7 +2,10 @@
 
 namespace App\Entity;
 
+use App\Model\DoubletDetectableInterface;
+use App\Model\NormalizableInterface;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 /**
  * CdbPerson.
@@ -10,7 +13,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="cdb_person", uniqueConstraints={@ORM\UniqueConstraint(name="guid", columns={"guid"})})
  * @ORM\Entity(repositoryClass="App\Repository\CdbPersonRepository")
  */
-class CdbPerson
+class CdbPerson implements NormalizableInterface, DoubletDetectableInterface
 {
     /**
      * @var int
@@ -729,15 +732,29 @@ class CdbPerson
         return $this;
     }
 
-    public function getObjectVars()
+    /**
+     * @Ignore
+     */
+    public function getVarsToNormalize()
     {
         return get_object_vars($this);
     }
 
-    public function setObjectVars($objectVarsMap)
+    /**
+     * @Ignore
+     */
+    public function setNormalizedVars($normalizedVarsMap)
     {
-        foreach ($objectVarsMap as $objectVar => $objectVarVal) {
+        foreach ($normalizedVarsMap as $objectVar => $objectVarVal) {
             $this->{$objectVar} = $objectVarVal;
         }
+    }
+
+    /**
+     * @Ignore
+     */
+    public function getVarsToDoubletDetect()
+    {
+        return get_object_vars($this);
     }
 }

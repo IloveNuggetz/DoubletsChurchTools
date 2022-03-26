@@ -2,7 +2,10 @@
 
 namespace App\Entity;
 
+use App\Model\DoubletDetectableInterface;
+use App\Model\NormalizableInterface;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 /**
  * CdbGemeindeperson.
@@ -10,7 +13,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="cdb_gemeindeperson", indexes={@ORM\Index(name="status_id", columns={"status_id"}), @ORM\Index(name="station_id", columns={"station_id"}), @ORM\Index(name="person_id", columns={"person_id"})})
  * @ORM\Entity(repositoryClass="App\Repository\CdbGemeindepersonRepository")
  */
-class CdbGemeindeperson
+class CdbGemeindeperson implements NormalizableInterface, DoubletDetectableInterface
 {
     /**
      * @var int
@@ -196,6 +199,7 @@ class CdbGemeindeperson
      * @ORM\JoinColumns({
      *   @ORM\JoinColumn(name="station_id", referencedColumnName="id")
      * })
+     *@Ignore
      */
     private $station;
 
@@ -206,6 +210,7 @@ class CdbGemeindeperson
      * @ORM\JoinColumns({
      *   @ORM\JoinColumn(name="status_id", referencedColumnName="id")
      * })
+     *@Ignore
      */
     private $status;
 
@@ -548,15 +553,29 @@ class CdbGemeindeperson
         return $this;
     }
 
-    public function getObjectVars()
+    /**
+     * @Ignore
+     */
+    public function getVarsToNormalize()
     {
         return get_object_vars($this);
     }
 
-    public function setObjectVars($objectVarsMap)
+    /**
+     * @Ignore
+     */
+    public function setNormalizedVars($normalizedVarsMap)
     {
-        foreach ($objectVarsMap as $objectVar => $objectVarVal) {
+        foreach ($normalizedVarsMap as $objectVar => $objectVarVal) {
             $this->{$objectVar} = $objectVarVal;
         }
+    }
+
+    /**
+     * @Ignore
+     */
+    public function getVarsToDoubletDetect()
+    {
+        return get_object_vars($this);
     }
 }

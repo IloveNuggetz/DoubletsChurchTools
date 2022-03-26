@@ -52,33 +52,13 @@ class DoubletsService
             $person = $this->normalizePerson($person, $logger, $dns);
         }
 
-        $gemeindepersonDoublets = $this->ddds->detectDoublets($gemeindeperson, 'graceful');
-        $personDoublets = $this->ddds->detectDoublets($person, 'graceful');
+        $gemeindepersonDoublets = $this->ddds->detectDoublets($gemeindepersons, 2, ['Levenshtein-distance', 'Other doublet paradigms'], ['Possibly semantic domaindriven rules here']);
+        //$personDoublets = $this->ddds->detectDoublets($persons, 2, ['Levenshtein-distance', 'Other doublet paradigms'], ['Possibly semantic domaindriven rules here']);
+        $personDoublets = [];
 
-        $map = [];
+        $doublets = ['Gemeindepersons' => $gemeindepersonDoublets, 'Persons' => $personDoublets];
 
-        for ($i = 0; $i < count($gemeindepersons); ++$i) {
-            $person = $gemeindepersons[$i]->getPerson();
-            $strasse = $person->getStrasse();
-            //$logger->info($i);
-
-            if (!is_null($strasse)) {
-                $id = $person->getId();
-
-                if (!array_key_exists($strasse, $map)) {
-                    $map[$strasse] = [$id];
-                } else {
-                    if (in_array($id, $map[$strasse])) {
-                        $logger->info($strasse);
-                        $logger->info('got it');
-                    }
-
-                    array_push($map[$strasse], $id);
-                }
-            }
-        }
-
-        return $map;
+        return $doublets;
     }
 
     public function normalizeGemeindeperson($gemeindeperson, $logger, $dns)
@@ -104,9 +84,10 @@ class DoubletsService
     }
 
     //This function needs an interface for object, to ensure that getObjectVars and set are available
+    //Could also normalize dates and maybe mobile numbers
     public function normalizeStrings($object, $logger, $dns)
     {
-        $objectVarsMap = $object->getObjectVars();
+        $objectVarsMap = $object->getVarsToNormalize();
 
         foreach ($objectVarsMap as $objectVar => $objectVarVal) {
             if (is_string($objectVarVal)) {
@@ -115,7 +96,7 @@ class DoubletsService
             }
         }
 
-        $object->setObjectVars($objectVarsMap);
+        $object->setNormalizedVars($objectVarsMap);
 
         return $object;
     }

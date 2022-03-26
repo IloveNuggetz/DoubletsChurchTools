@@ -31,7 +31,7 @@ class DoubletsController extends AbstractController
      *     description = "Returns all recognized person doublets",
      *     @OA\JsonContent(
      *        type="array",
-     *        @OA\Items(ref=@Model(type="App\Entity\Doublet"))
+     *        @OA\Items(ref=@Model(type="App\Model\DoubletDetectorResult"))
      *     )
      * )
      */
@@ -44,7 +44,11 @@ class DoubletsController extends AbstractController
         $serializer = $this->container->get('serializer');
         $reports = $serializer->serialize($doublets, 'json');
 
-        return new Response(json_encode($doublets));
+        $response = new Response();
+        $response->setContent($reports);
+        $response->headers->set('Content-Type', 'application/json');
+
+        return $response;
     }
 
     /**
