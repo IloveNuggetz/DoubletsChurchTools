@@ -38,32 +38,36 @@ class DataDoubletDetectorService
 
                 $cumulatedDissimilarityResult = $this->calcCumulatedDissimilarityScore($objectVarsMap, $referenceObjectVarMap);
 
-                $cumulatedLevenshteinScore = $cumulatedDissimilarityResult->getCumulatedDissimilarityScore();
+                $cumulatedDissimilarityScore = $cumulatedDissimilarityResult->getCumulatedDissimilarityScore();
+                $cumulatedLevenshteinScore = $cumulatedDissimilarityResult->getCumulatedLevenshteinScore();
                 $stringsComparedCount = $cumulatedDissimilarityResult->getStringsComparedCount();
                 $cumulatedWeightFactor = $cumulatedDissimilarityResult->getCumulatedWeightFactor();
 
-                $avgLevenshteinString = 0;
+                $avgDissimilarityString = 0;
                 if ($stringsComparedCount > 0) {
-                    $avgLevenshteinString = $cumulatedLevenshteinScore / $stringsComparedCount;
+                    $avgDissimilarityString = $cumulatedDissimilarityScore / $stringsComparedCount;
 
                     //if weighting is active this will bring values back to 0...1
                     //TODO: make weighting optional setting
-                    $avgLevenshteinString = $avgLevenshteinString * ($stringsComparedCount / $cumulatedWeightFactor);
+                    $avgDissimilarityString = $avgDissimilarityString * ($stringsComparedCount / $cumulatedWeightFactor);
 
-                    if ($highestL < $avgLevenshteinString) {
-                        $highestL = $avgLevenshteinString;
+                    if ($highestL < $avgDissimilarityString) {
+                        $highestL = $avgDissimilarityString;
                         //$this->logger->info($highestL);
                     }
-                    if ($lowestL > $avgLevenshteinString) {
-                        $lowestL = $avgLevenshteinString;
+                    if ($lowestL > $avgDissimilarityString) {
+                        $lowestL = $avgDissimilarityString;
                         $this->logger->info($lowestL);
                     }
                 } else {
                     throw $this->createNotFoundException('No comparable data provided!');
                 }
 
-                if ($avgLevenshteinString <= $dissimilarityScoreCutoff) {
-                    $currentPotentialDoublet = new Doublet($currentObjectIndex, $i, new DoubletReason($avgLevenshteinString, $paradigmsToApply, $semanticRulesToApply, ['Levenshtein' => $avgLevenshteinString]));
+                if ($avgDissimilarityString > $dissimilarityScoreCutoff) {
+                    //TODO: improve response format to include details of single comparison scores
+                    // also sort doublets by dissimilarityScore and with that implement a static maximum and a settable maximum/minimum of doublets to be shown
+                    // make upper limit of cutoff settable but no higher than 0.4 e.g.
+                    $currentPotentialDoublet = new Doublet($currentObjectIndex, $i, new DoubletReason($avgDissimilarityString, $paradigmsToApply, $semanticRulesToApply, ['Levenshtein' => $cumulatedLevenshteinScore, 'Weight' => $cumulatedWeightFactor, 'StringsCompared' => $stringsComparedCount]));
                     $doubletsRelevantResults[$currentObjectIndex][$i] = $currentPotentialDoublet;
                     $originalInputRelevantResults[$currentObjectIndex] = $objectsDataSet[$currentObjectIndex];
                     $originalInputRelevantResults[$i] = $objectsDataSet[$i];
@@ -78,6 +82,7 @@ class DataDoubletDetectorService
 
     public function calcCumulatedDissimilarityScore($objectVarsMap, $referenceObjectVarMap): CumulatedDissimilarityResult
     {
+        $cumulatedDissimilarityScore = 0;
         $cumulatedLevenshteinScore = 0;
         $stringsComparedCount = 0;
         $cumulatedWeightFactor = 0;
@@ -89,7 +94,7 @@ class DataDoubletDetectorService
             if (is_string($objectVarVal)) {
                 $referenceObjectVarVal = $referenceObjectVarMap[$objectVar];
 
-                $levenshteinScore = $this->calcLevenshteinScore($objectVarVal, $referenceObjectVarVal);
+                $levenshteinScore = $this->calcLevenshteinScore($objectVarVal, $referenceObjectVarVal, true);
 
                 $weightFactor = $this->getSemanticWeightFactor($objectVar);
 
@@ -100,8 +105,9 @@ class DataDoubletDetectorService
                 }
 
                 //TODO: make weighting optional setting
-                $levenshteinScore = $levenshteinScore * $weightFactor;
+                $dissimilarityScore = $levenshteinScore * $weightFactor;
 
+                $cumulatedDissimilarityScore = $cumulatedDissimilarityScore + $dissimilarityScore;
                 $cumulatedLevenshteinScore = $cumulatedLevenshteinScore + $levenshteinScore;
                 $cumulatedWeightFactor = $cumulatedWeightFactor + $weightFactor;
                 ++$stringsComparedCount;
@@ -109,25 +115,26 @@ class DataDoubletDetectorService
                 $referenceObjectVarVal = $referenceObjectVarMap[$objectVar];
                 $nestedObjectResult = $this->calcCumulatedDissimilarityScore($objectVarVal->getVarsToDoubletDetect(), $referenceObjectVarVal->getVarsToDoubletDetect());
 
-                $cumulatedLevenshteinScore = $cumulatedLevenshteinScore + $nestedObjectResult->getCumulatedDissimilarityScore();
+                $cumulatedDissimilarityScore = $cumulatedDissimilarityScore + $nestedObjectResult->getCumulatedDissimilarityScore();
+                $cumulatedLevenshteinScore = $cumulatedLevenshteinScore + $nestedObjectResult->getCumulatedLevenshteinScore();
                 $cumulatedWeightFactor = $cumulatedWeightFactor + $nestedObjectResult->getCumulatedWeightFactor();
                 $stringsComparedCount = $stringsComparedCount + $nestedObjectResult->getStringsComparedCount();
             }
         }
 
-        $cumulatedDissimilarityResult = new CumulatedDissimilarityResult($cumulatedLevenshteinScore, $stringsComparedCount, $cumulatedWeightFactor);
+        $cumulatedDissimilarityResult = new CumulatedDissimilarityResult($cumulatedDissimilarityScore, $cumulatedLevenshteinScore, $stringsComparedCount, $cumulatedWeightFactor);
 
         return $cumulatedDissimilarityResult;
     }
 
-    public function calcLevenshteinScore($value, $referenceValue): float
+    public function calcLevenshteinScore($value, $referenceValue, $lengthNormalized): float
     {
         $levenshteinScore = levenshtein($value, $referenceValue, 1, 1, 1);
 
         $totalCharactersCount = mb_strlen($value) + mb_strlen($referenceValue);
 
         //get levenshteinScore normalized to per character
-        if ($totalCharactersCount > 0) {
+        if ($totalCharactersCount > 0 && $lengthNormalized) {
             $levenshteinScore = $levenshteinScore / $totalCharactersCount;
         }
 

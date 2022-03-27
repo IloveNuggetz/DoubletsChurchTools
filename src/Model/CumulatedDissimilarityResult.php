@@ -5,6 +5,7 @@ namespace App\Model;
 class CumulatedDissimilarityResult
 {
     private $cumulatedDissimilarityScore;
+    private $cumulatedLevenshteinScore;
     private $stringsComparedCount;
     private $cumulatedWeightFactor;
 
@@ -19,6 +20,18 @@ class CumulatedDissimilarityResult
 
         return $this;
     }
+
+        public function getCumulatedLevenshteinScore(): float
+        {
+            return $this->cumulatedLevenshteinScore;
+        }
+
+        public function setCumulatedLevenshteinScore(float $cumulatedLevenshteinScore): self
+        {
+            $this->cumulatedLevenshteinScore = $cumulatedLevenshteinScore;
+
+            return $this;
+        }
 
     public function getStringsComparedCount()
     {
@@ -44,9 +57,10 @@ class CumulatedDissimilarityResult
         return $this;
     }
 
-    public function __construct(float $cumulatedDissimilarityScore, int $stringsComparedCount, float $cumulatedWeightFactor)
+    public function __construct(float $cumulatedDissimilarityScore, float $cumulatedLevenshteinScore, int $stringsComparedCount, float $cumulatedWeightFactor)
     {
         $this->cumulatedDissimilarityScore = $cumulatedDissimilarityScore;
+        $this->cumulatedLevenshteinScore = $cumulatedLevenshteinScore;
         $this->stringsComparedCount = $stringsComparedCount;
         $this->cumulatedWeightFactor = $cumulatedWeightFactor;
     }

@@ -68,7 +68,7 @@ class DoubletsController extends AbstractController
      * @OA\Response(
      *     response = 200,
      *     description = "Returns resulting fused person",
-     *     @OA\JsonContent(ref=@Model(type="App\Entity\CdbPerson"))
+     *     @OA\JsonContent(ref=@Model(type="App\Entity\CdbGemeindeperson"))
      * )
      * @OA\Response(
      *     response = 404,
