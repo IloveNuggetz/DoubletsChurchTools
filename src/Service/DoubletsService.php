@@ -33,30 +33,18 @@ class DoubletsService
 
         $logger = $this->logger;
         $gemeindepersonRepo = $this->gemeindepersonRepo;
-        $personRepo = $this->personRepo;
         $dns = $this->dns;
         $ddds = $this->ddds;
 
-        //Only compare person - person | gemeindeperson - gemeindeperson
-        $persons = $personRepo->findAll();
         $gemeindepersons = $gemeindepersonRepo->findAll();
-
-        $logger->info(count($gemeindepersons));
-        $logger->info(count($persons));
 
         foreach ($gemeindepersons as $gemeindeperson) {
             $gemeindeperson = $this->normalizeGemeindeperson($gemeindeperson, $logger, $dns);
         }
 
-        foreach ($persons as $person) {
-            $person = $this->normalizePerson($person, $logger, $dns);
-        }
+        $gemeindepersonDoublets = $this->ddds->detectDoublets($gemeindepersons, 0.15, ['Length-Normalized-Levenshtein-distance', 'Other doublet paradigms'], ['Semantical weighting', 'Possibly semantic domaindriven rules here']);
 
-        $gemeindepersonDoublets = $this->ddds->detectDoublets($gemeindepersons, 2, ['Levenshtein-distance', 'Other doublet paradigms'], ['Possibly semantic domaindriven rules here']);
-        //$personDoublets = $this->ddds->detectDoublets($persons, 2, ['Levenshtein-distance', 'Other doublet paradigms'], ['Possibly semantic domaindriven rules here']);
-        $personDoublets = [];
-
-        $doublets = ['Gemeindepersons' => $gemeindepersonDoublets, 'Persons' => $personDoublets];
+        $doublets = ['Gemeindepersons' => $gemeindepersonDoublets];
 
         return $doublets;
     }
@@ -83,8 +71,7 @@ class DoubletsService
         return $person;
     }
 
-    //This function needs an interface for object, to ensure that getObjectVars and set are available
-    //Could also normalize dates and maybe mobile numbers
+    //TODO: Could also normalize dates and maybe mobile numbers
     public function normalizeStrings($object, $logger, $dns)
     {
         $objectVarsMap = $object->getVarsToNormalize();
