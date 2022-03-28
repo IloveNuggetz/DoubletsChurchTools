@@ -1,0 +1,615 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "DoubletsChurchTools",
+        "description": "Example Api for searching and merging doublet datasets",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "\/api\/doublets": {
+            "get": {
+                "operationId": "get_doublets",
+                "responses": {
+                    "200": {
+                        "description": "Returns all recognized person doublets",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#\/components\/schemas\/DoubletDetectorResult"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/api\/doublets\/merge": {
+            "post": {
+                "operationId": "post_doublets_merge",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "$ref": "#\/components\/schemas\/CdbGemeindepersonMergeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Returns resulting fused person",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/CdbGemeindeperson"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The given ids are not applicable for merging!"
+                    },
+                    "400": {
+                        "description": "Invalid request body"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "DoubletDetectorResult": {
+                "properties": {
+                    "doublets": {
+                        "description": "Array of possible doublets",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/Doublet"
+                        }
+                    },
+                    "objects data": {
+                        "description": "Array of objects that doublets are based on",
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "CdbGemeindepersonMergeRequest": {
+                "required": [
+                    "firstId",
+                    "secondId",
+                    "mergeScheme"
+                ],
+                "properties": {
+                    "firstId": {
+                        "description": "Id of first person to merge",
+                        "type": "integer"
+                    },
+                    "secondId": {
+                        "description": "Id of second person to merge",
+                        "type": "integer"
+                    },
+                    "mergeScheme": {
+                        "$ref": "#\/components\/schemas\/CdbGemeindepersonMergeCompositionScheme"
+                    }
+                },
+                "type": "object"
+            },
+            "CdbGemeindeperson": {
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "beruf": {
+                        "type": "string"
+                    },
+                    "geburtsname": {
+                        "type": "string"
+                    },
+                    "geburtsdatum": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "geburtsort": {
+                        "type": "string"
+                    },
+                    "nationalitaet": {
+                        "type": "string"
+                    },
+                    "nationalitaetId": {
+                        "type": "integer"
+                    },
+                    "familienstandNo": {
+                        "type": "integer"
+                    },
+                    "hochzeitsdatum": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "erstkontakt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "zugehoerig": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "eintrittsdatum": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "austrittsgrund": {
+                        "type": "string"
+                    },
+                    "austrittsdatum": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "taufdatum": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "taufort": {
+                        "type": "string"
+                    },
+                    "getauftdurch": {
+                        "type": "string"
+                    },
+                    "ueberwiesenvon": {
+                        "type": "string"
+                    },
+                    "ueberwiesennach": {
+                        "type": "string"
+                    },
+                    "imageurl": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "familyimageurl": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "growpathId": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "letzteaenderung": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "aenderunguser": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "gev": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "person": {
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#\/components\/schemas\/CdbPerson"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "Doublet": {
+                "properties": {
+                    "reason": {
+                        "$ref": "#\/components\/schemas\/DoubletReason"
+                    },
+                    "baseObject": {
+                        "type": "integer"
+                    },
+                    "referenceObject": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "CdbGemeindepersonMergeCompositionScheme": {
+                "required": [
+                    "id"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "beruf": {
+                        "type": "integer"
+                    },
+                    "geburtsname": {
+                        "type": "integer"
+                    },
+                    "geburtsdatum": {
+                        "type": "integer"
+                    },
+                    "geburtsort": {
+                        "type": "integer"
+                    },
+                    "nationalitaet": {
+                        "type": "integer"
+                    },
+                    "nationalitaetId": {
+                        "type": "integer"
+                    },
+                    "familienstandNo": {
+                        "type": "integer"
+                    },
+                    "hochzeitsdatum": {
+                        "type": "integer"
+                    },
+                    "erstkontakt": {
+                        "type": "integer"
+                    },
+                    "zugehoerig": {
+                        "type": "integer"
+                    },
+                    "eintrittsdatum": {
+                        "type": "integer"
+                    },
+                    "austrittsgrund": {
+                        "type": "integer"
+                    },
+                    "austrittsdatum": {
+                        "type": "integer"
+                    },
+                    "taufdatum": {
+                        "type": "integer"
+                    },
+                    "taufort": {
+                        "type": "integer"
+                    },
+                    "getauftdurch": {
+                        "type": "integer"
+                    },
+                    "ueberwiesenvon": {
+                        "type": "integer"
+                    },
+                    "ueberwiesennach": {
+                        "type": "integer"
+                    },
+                    "imageurl": {
+                        "type": "integer"
+                    },
+                    "familyimageurl": {
+                        "type": "integer"
+                    },
+                    "growpathId": {
+                        "type": "integer"
+                    },
+                    "letzteaenderung": {
+                        "type": "integer"
+                    },
+                    "aenderunguser": {
+                        "type": "integer"
+                    },
+                    "gev": {
+                        "type": "integer"
+                    },
+                    "station": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "type": "integer"
+                    },
+                    "person": {
+                        "$ref": "#\/components\/schemas\/CdbPersonMergeCompositionScheme"
+                    }
+                },
+                "type": "object"
+            },
+            "CdbPerson": {
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "guid": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "vorname": {
+                        "type": "string"
+                    },
+                    "spitzname": {
+                        "type": "string"
+                    },
+                    "activeYn": {
+                        "type": "integer"
+                    },
+                    "password": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "loginstr": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "lastlogin": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "loginerrorcount": {
+                        "type": "integer"
+                    },
+                    "acceptedsecurity": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "geschlechtNo": {
+                        "type": "integer"
+                    },
+                    "titel": {
+                        "type": "string"
+                    },
+                    "strasse": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "plz": {
+                        "type": "string"
+                    },
+                    "ort": {
+                        "type": "string"
+                    },
+                    "land": {
+                        "type": "string"
+                    },
+                    "zusatz": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "telefonprivat": {
+                        "type": "string"
+                    },
+                    "telefongeschaeftlich": {
+                        "type": "string"
+                    },
+                    "telefonhandy": {
+                        "type": "string"
+                    },
+                    "fax": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "geolat": {
+                        "type": "string"
+                    },
+                    "geolng": {
+                        "type": "string"
+                    },
+                    "geolatLoose": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "geolngLoose": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "cmsuserid": {
+                        "type": "string"
+                    },
+                    "archivYn": {
+                        "type": "integer"
+                    },
+                    "optigemNr": {
+                        "type": "string"
+                    },
+                    "datasecuritymailDate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "privacyPolicyAgreementDate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "privacyPolicyAgreementTypeId": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "privacyPolicyAgreementWhoId": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "createdate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "letzteaenderung": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "aenderunguser": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "isSystemUser": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "DoubletReason": {
+                "properties": {
+                    "dissimilarityScore": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "similarityParadigmsApplied": {
+                        "description": "Array of similarity paradigms that were applied",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "semanticRulesApplied": {
+                        "description": "Array of semantic rules that were applied",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "details": {
+                        "description": "More detailed info on comparison process result",
+                        "type": "array",
+                        "items": {
+                            "type": "float"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "CdbPersonMergeCompositionScheme": {
+                "required": [
+                    "id"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "guid": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "integer"
+                    },
+                    "vorname": {
+                        "type": "integer"
+                    },
+                    "spitzname": {
+                        "type": "integer"
+                    },
+                    "activeYn": {
+                        "type": "integer"
+                    },
+                    "password": {
+                        "type": "integer"
+                    },
+                    "loginstr": {
+                        "type": "integer"
+                    },
+                    "lastlogin": {
+                        "type": "integer"
+                    },
+                    "loginerrorcount": {
+                        "type": "integer"
+                    },
+                    "acceptedsecurity": {
+                        "type": "integer"
+                    },
+                    "geschlechtNo": {
+                        "type": "integer"
+                    },
+                    "titel": {
+                        "type": "integer"
+                    },
+                    "strasse": {
+                        "type": "integer"
+                    },
+                    "plz": {
+                        "type": "integer"
+                    },
+                    "ort": {
+                        "type": "integer"
+                    },
+                    "land": {
+                        "type": "integer"
+                    },
+                    "zusatz": {
+                        "type": "integer"
+                    },
+                    "telefonprivat": {
+                        "type": "integer"
+                    },
+                    "telefongeschaeftlich": {
+                        "type": "integer"
+                    },
+                    "telefonhandy": {
+                        "type": "integer"
+                    },
+                    "fax": {
+                        "type": "integer"
+                    },
+                    "email": {
+                        "type": "integer"
+                    },
+                    "geolat": {
+                        "type": "integer"
+                    },
+                    "geolng": {
+                        "type": "integer"
+                    },
+                    "geolatLoose": {
+                        "type": "integer"
+                    },
+                    "geolngLoose": {
+                        "type": "integer"
+                    },
+                    "cmsuserid": {
+                        "type": "integer"
+                    },
+                    "archivYn": {
+                        "type": "integer"
+                    },
+                    "optigemNr": {
+                        "type": "integer"
+                    },
+                    "datasecuritymailDate": {
+                        "type": "integer"
+                    },
+                    "privacyPolicyAgreementDate": {
+                        "type": "integer"
+                    },
+                    "privacyPolicyAgreementTypeId": {
+                        "type": "integer"
+                    },
+                    "privacyPolicyAgreementWhoId": {
+                        "type": "integer"
+                    },
+                    "createdate": {
+                        "type": "integer"
+                    },
+                    "letzteaenderung": {
+                        "type": "integer"
+                    },
+                    "aenderunguser": {
+                        "type": "integer"
+                    },
+                    "isSystemUser": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            }
+        }
+    }
+}

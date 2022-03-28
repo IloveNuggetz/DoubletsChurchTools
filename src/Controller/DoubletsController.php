@@ -2,8 +2,9 @@
 
 namespace App\Controller;
 
-use App\Service\DoubletsService;
 use Nelmio\ApiDocBundle\Annotation\Model;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
 use OpenApi\Annotations as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -11,6 +12,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
+
+use App\Model\CdbGemeindepersonMergeRequest;
+
+use App\Service\DoubletsService;
 
 class DoubletsController extends AbstractController
 {
@@ -56,14 +61,7 @@ class DoubletsController extends AbstractController
      *
      * @OA\RequestBody(
      *     required=true,
-     *     @OA\MediaType(
-     *         mediaType="application/json",
-     *         @OA\Schema (
-     *              type="object",
-     *              @OA\Property(property="firstId", description="Id of first person to merge", type="int"),
-     *              @OA\Property(property="secondId", description="Id of second person to merge", type="int")
-     *         )
-     *     )
+     *     @OA\JsonContent(ref=@Model(type="App\Model\CdbGemeindepersonMergeRequest"))
      * )
      * @OA\Response(
      *     response = 200,
@@ -84,19 +82,23 @@ class DoubletsController extends AbstractController
         $logger = $this->logger;
         $ds = $this->ds;
 
-        $logger->info($request->getContent());
+        #$logger->info($request->getContent());
 
-        //http stuff
-        $varPost = json_decode($request->getContent(), true);
+        $jsonFile = file_get_contents('../openapi.json');
+        $validator = (new \League\OpenAPIValidation\PSR7\ValidatorBuilder)->fromJson($jsonFile)->getServerRequestValidator();
 
-        if (JSON_ERROR_NONE !== json_last_error()) {
-            throw new BadRequestHttpException('Invalid request body: '.json_last_error_msg());
-        }
+        //http stuff to use openApi validator
+        $psr17Factory = new Psr17Factory();
+        $psrHttpFactory = new PsrHttpFactory($psr17Factory, $psr17Factory, $psr17Factory, $psr17Factory);
+        $psrRequest = $psrHttpFactory->createRequest($request);
 
-        $logger->info($varPost['firstId']);
-        $logger->info($varPost['secondId']);
+        $isValid = $validator->validate($psrRequest);
 
-        $newFusionedEntity = $ds->mergePersons($varPost);
+        $serializer = $this->container->get('serializer');
+        $mergeRequest = $serializer->deserialize($request->getContent(), CdbGemeindepersonMergeRequest::class, 'json');
+
+
+        $newFusionedEntity = $ds->mergePersons($mergeRequest);
 
         $serializer = $this->container->get('serializer');
         $reports = $serializer->serialize($newFusionedEntity, 'json');

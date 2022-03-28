@@ -2,11 +2,31 @@
 
 namespace App\Model;
 
+use OpenApi\Annotations as OA;
+
 class DoubletReason
 {
     private $dissimilarityScore;
+
+    /**
+     * @OA\Property(property="similarityParadigmsApplied", description="Array of similarity paradigms that were applied", type="array",
+     *      @OA\Items(type="string")
+     *)
+     */
     private $similarityParadigmsApplied;
+
+    /**
+     * @OA\Property(property="semanticRulesApplied", description="Array of semantic rules that were applied", type="array",
+     *      @OA\Items(type="string")
+     *)
+     */
     private $semanticRulesApplied;
+
+    /**
+     * @OA\Property(property="details", description="More detailed info on comparison process result", type="array",
+     *      @OA\Items(type="float")
+     *)
+     */
     private $details;
 
     public function getDissimilarityScore(): float

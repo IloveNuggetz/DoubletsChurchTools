@@ -37,7 +37,6 @@ class DataNormalizationService
                         case 'Ö': $out .= 'Oe';
                         break;
                         case '̈': $out .= 'e';
-                        $logger->info($str);
                         break;
                         default: $out .= $ch;
                    }

@@ -21,17 +21,17 @@ class CumulatedDissimilarityResult
         return $this;
     }
 
-        public function getCumulatedLevenshteinScore(): float
-        {
-            return $this->cumulatedLevenshteinScore;
-        }
+    public function getCumulatedLevenshteinScore(): float
+    {
+        return $this->cumulatedLevenshteinScore;
+    }
 
-        public function setCumulatedLevenshteinScore(float $cumulatedLevenshteinScore): self
-        {
-            $this->cumulatedLevenshteinScore = $cumulatedLevenshteinScore;
+    public function setCumulatedLevenshteinScore(float $cumulatedLevenshteinScore): self
+    {
+        $this->cumulatedLevenshteinScore = $cumulatedLevenshteinScore;
 
-            return $this;
-        }
+        return $this;
+    }
 
     public function getStringsComparedCount()
     {

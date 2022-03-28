@@ -88,7 +88,7 @@ class DoubletsService
         return $object;
     }
 
-    public function mergePersons($mergeRequestArray): CdbPerson
+    public function mergePersons($mergeRequest): CdbPerson
     {
         $personRepo = $this->personRepo;
         $em = $this->em;
@@ -103,8 +103,8 @@ class DoubletsService
         $newFusionedEntity = new CdbPerson();
         $newFusionedEntity->setName('George');
 
-        $person = $personRepo->findOneBy(['id' => $mergeRequestArray['firstId']]);
-        $person2 = $personRepo->findOneBy(['id' => $mergeRequestArray['secondId']]);
+        $person = $personRepo->findOneBy(['id' => $mergeRequest->getFirstId()]);
+        $person2 = $personRepo->findOneBy(['id' => $mergeRequest->getSecondId()]);
 
         /*
         $em->transactional(function($em) {
