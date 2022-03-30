@@ -2,20 +2,17 @@
 
 namespace App\Controller;
 
+use App\Model\CdbGemeindepersonMergeRequest;
+use App\Service\DoubletsService;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
 use OpenApi\Annotations as OA;
 use Psr\Log\LoggerInterface;
+use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
-
-use App\Model\CdbGemeindepersonMergeRequest;
-
-use App\Service\DoubletsService;
 
 class DoubletsController extends AbstractController
 {
@@ -33,10 +30,8 @@ class DoubletsController extends AbstractController
      *
      * @OA\Response(
      *     response = 200,
-     *     description = "Returns all recognized person doublets",
-     *     @OA\JsonContent(
-     *        type="array",
-     *        @OA\Items(ref=@Model(type="App\Model\DoubletDetectorResult"))
+     *     description = "Returns all recognized CdbGemeindeperson doublets",
+     *     @OA\JsonContent(ref=@Model(type="App\Model\DoubletDetectorResult"))
      *     )
      * )
      */
@@ -44,10 +39,10 @@ class DoubletsController extends AbstractController
     {
         $ds = $this->ds;
 
-        $doublets = $ds->getExistingDoublets();
+        $doubletsDetectorResult = $ds->getDoublets("App\Entity\CdbGemeindeperson");
 
         $serializer = $this->container->get('serializer');
-        $reports = $serializer->serialize($doublets, 'json');
+        $reports = $serializer->serialize($doubletsDetectorResult, 'json');
 
         $response = new Response();
         $response->setContent($reports);
@@ -65,7 +60,7 @@ class DoubletsController extends AbstractController
      * )
      * @OA\Response(
      *     response = 200,
-     *     description = "Returns resulting fused person",
+     *     description = "Returns resulting CdbGemeindeperson",
      *     @OA\JsonContent(ref=@Model(type="App\Entity\CdbGemeindeperson"))
      * )
      * @OA\Response(
@@ -73,8 +68,8 @@ class DoubletsController extends AbstractController
      *     description = "The given ids are not applicable for merging!",
      * )
      * @OA\Response(
-     *     response = 400,
-     *     description = "Invalid request body",
+     *     response = 500,
+     *     description = "Body does not match schema!",
      * )
      */
     public function merge(Request $request): Response
@@ -82,25 +77,14 @@ class DoubletsController extends AbstractController
         $logger = $this->logger;
         $ds = $this->ds;
 
-        #$logger->info($request->getContent());
+        //$logger->info($request->getContent());
 
-        $jsonFile = file_get_contents('../openapi.json');
-        $validator = (new \League\OpenAPIValidation\PSR7\ValidatorBuilder)->fromJson($jsonFile)->getServerRequestValidator();
-
-        //http stuff to use openApi validator
-        $psr17Factory = new Psr17Factory();
-        $psrHttpFactory = new PsrHttpFactory($psr17Factory, $psr17Factory, $psr17Factory, $psr17Factory);
-        $psrRequest = $psrHttpFactory->createRequest($request);
-
-        $isValid = $validator->validate($psrRequest);
-
+        $this->validate($request);
         $serializer = $this->container->get('serializer');
         $mergeRequest = $serializer->deserialize($request->getContent(), CdbGemeindepersonMergeRequest::class, 'json');
 
+        $newFusionedEntity = $ds->mergeEntities($mergeRequest, "App\Entity\CdbGemeindeperson");
 
-        $newFusionedEntity = $ds->mergePersons($mergeRequest);
-
-        $serializer = $this->container->get('serializer');
         $reports = $serializer->serialize($newFusionedEntity, 'json');
 
         $response = new Response();
@@ -108,5 +92,19 @@ class DoubletsController extends AbstractController
         $response->headers->set('Content-Type', 'application/json');
 
         return $response;
+    }
+
+    public function validate(Request $request)
+    {
+        //TODO: This should get auto generated/updated on startup
+        $jsonFile = file_get_contents('../openapi.json');
+        $validator = (new \League\OpenAPIValidation\PSR7\ValidatorBuilder())->fromJson($jsonFile)->getServerRequestValidator();
+
+        //http stuff to use openApi validator
+        $psr17Factory = new Psr17Factory();
+        $psrHttpFactory = new PsrHttpFactory($psr17Factory, $psr17Factory, $psr17Factory, $psr17Factory);
+        $psrRequest = $psrHttpFactory->createRequest($request);
+
+        $validator->validate($psrRequest);
     }
 }

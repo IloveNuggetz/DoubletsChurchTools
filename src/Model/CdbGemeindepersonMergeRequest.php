@@ -38,8 +38,29 @@ class CdbGemeindepersonMergeRequest
         return $this->secondId;
     }
 
-    public function getMergeScheme()
+    public function getMergeScheme(): CdbGemeindepersonMergeCompositionScheme
     {
         return $this->mergeScheme;
+    }
+
+    public function setFirstId($firstId)
+    {
+        $this->firstId = $firstId;
+
+        return $this;
+    }
+
+    public function setSecondId($secondId)
+    {
+        $this->secondId = $secondId;
+
+        return $this;
+    }
+
+    public function setMergeScheme(CdbGemeindepersonMergeCompositionScheme $mergeScheme)
+    {
+        $this->mergeScheme = $mergeScheme;
+
+        return $this;
     }
 }

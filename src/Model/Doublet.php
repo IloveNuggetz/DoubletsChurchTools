@@ -8,24 +8,24 @@ class Doublet
     private $referenceObjectIndex;
     private $reason;
 
-    public function getBaseObject(): ?int
+    public function getBaseObjectIndex(): ?int
     {
         return $this->baseObjectIndex;
     }
 
-    public function setBaseObject(int $baseObjectIndex): self
+    public function setBaseObjectIndex(int $baseObjectIndex): self
     {
         $this->baseObjectIndex = $baseObjectIndex;
 
         return $this;
     }
 
-    public function getReferenceObject(): ?int
+    public function getReferenceObjectIndex(): ?int
     {
         return $this->referenceObjectIndex;
     }
 
-    public function setReferenceObject(int $referenceObjectIndex): self
+    public function setReferenceObjectIndex(int $referenceObjectIndex): self
     {
         $this->referenceObjectIndex = $referenceObjectIndex;
 

@@ -8,10 +8,10 @@ use OpenApi\Annotations as OA;
 /**
  *         @OA\Schema (
  *              type="object",
- *              required={"id"}
+ *              required={"id", "person", "beruf", "geburtsname", "geburtsdatum", "geburtsort", "nationalitaet", "nationalitaetId", "familienstandNo", "hochzeitsdatum", "station", "status", "erstkontakt", "zugehoerig", "eintrittsdatum", "austrittsgrund", "austrittsdatum", "taufdatum", "taufort", "getauftdurch", "ueberwiesenvon", "ueberwiesennach", "imageurl", "familyimageurl", "growpathId", "letzteaenderung", "aenderunguser", "gev"}
  *         )
  */
-class CdbGemeindepersonMergeCompositionScheme
+class CdbGemeindepersonMergeCompositionScheme extends AbstractMergeCompositionScheme
 {
     /**
      * @var int
@@ -289,8 +289,204 @@ class CdbGemeindepersonMergeCompositionScheme
         return $this->status;
     }
 
-    public function getPerson()
+    public function getPerson(): CdbPersonMergeCompositionScheme
     {
         return $this->person;
+    }
+
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    public function setBeruf($beruf)
+    {
+        $this->beruf = $beruf;
+
+        return $this;
+    }
+
+    public function setGeburtsname($geburtsname)
+    {
+        $this->geburtsname = $geburtsname;
+
+        return $this;
+    }
+
+    public function setGeburtsdatum($geburtsdatum)
+    {
+        $this->geburtsdatum = $geburtsdatum;
+
+        return $this;
+    }
+
+    public function setGeburtsort($geburtsort)
+    {
+        $this->geburtsort = $geburtsort;
+
+        return $this;
+    }
+
+    public function setNationalitaet($nationalitaet)
+    {
+        $this->nationalitaet = $nationalitaet;
+
+        return $this;
+    }
+
+    public function setNationalitaetId($nationalitaetId)
+    {
+        $this->nationalitaetId = $nationalitaetId;
+
+        return $this;
+    }
+
+    public function setFamilienstandNo($familienstandNo)
+    {
+        $this->familienstandNo = $familienstandNo;
+
+        return $this;
+    }
+
+    public function setHochzeitsdatum($hochzeitsdatum)
+    {
+        $this->hochzeitsdatum = $hochzeitsdatum;
+
+        return $this;
+    }
+
+    public function setErstkontakt($erstkontakt)
+    {
+        $this->erstkontakt = $erstkontakt;
+
+        return $this;
+    }
+
+    public function setZugehoerig($zugehoerig)
+    {
+        $this->zugehoerig = $zugehoerig;
+
+        return $this;
+    }
+
+    public function setEintrittsdatum($eintrittsdatum)
+    {
+        $this->eintrittsdatum = $eintrittsdatum;
+
+        return $this;
+    }
+
+    public function setAustrittsgrund($austrittsgrund)
+    {
+        $this->austrittsgrund = $austrittsgrund;
+
+        return $this;
+    }
+
+    public function setAustrittsdatum($austrittsdatum)
+    {
+        $this->austrittsdatum = $austrittsdatum;
+
+        return $this;
+    }
+
+    public function setTaufdatum($taufdatum)
+    {
+        $this->taufdatum = $taufdatum;
+
+        return $this;
+    }
+
+    public function setTaufort($taufort)
+    {
+        $this->taufort = $taufort;
+
+        return $this;
+    }
+
+    public function setGetauftdurch($getauftdurch)
+    {
+        $this->getauftdurch = $getauftdurch;
+
+        return $this;
+    }
+
+    public function setUeberwiesenvon($ueberwiesenvon)
+    {
+        $this->ueberwiesenvon = $ueberwiesenvon;
+
+        return $this;
+    }
+
+    public function setUeberwiesennach($ueberwiesennach)
+    {
+        $this->ueberwiesennach = $ueberwiesennach;
+
+        return $this;
+    }
+
+    public function setImageurl($imageurl)
+    {
+        $this->imageurl = $imageurl;
+
+        return $this;
+    }
+
+    public function setFamilyimageurl($familyimageurl)
+    {
+        $this->familyimageurl = $familyimageurl;
+
+        return $this;
+    }
+
+    public function setGrowpathId($growpathId)
+    {
+        $this->growpathId = $growpathId;
+
+        return $this;
+    }
+
+    public function setLetzteaenderung($letzteaenderung)
+    {
+        $this->letzteaenderung = $letzteaenderung;
+
+        return $this;
+    }
+
+    public function setAenderunguser($aenderunguser)
+    {
+        $this->aenderunguser = $aenderunguser;
+
+        return $this;
+    }
+
+    public function setGev($gev)
+    {
+        $this->gev = $gev;
+
+        return $this;
+    }
+
+    public function setStation($station)
+    {
+        $this->station = $station;
+
+        return $this;
+    }
+
+    public function setStatus($status)
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function setPerson(CdbPersonMergeCompositionScheme $person)
+    {
+        $this->person = $person;
+
+        return $person;
     }
 }

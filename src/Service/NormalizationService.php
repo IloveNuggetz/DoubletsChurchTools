@@ -2,7 +2,7 @@
 
 namespace App\Service;
 
-class DataNormalizationService
+class NormalizationService
 {
     public function normalizeCharacters($str, $logger): string
     {

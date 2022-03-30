@@ -9,7 +9,7 @@ use App\Model\DoubletDetectorResult;
 use App\Model\DoubletReason;
 use Psr\Log\LoggerInterface;
 
-class DataDoubletDetectorService
+class DoubletDetectorService
 {
     private $logger;
 
@@ -60,10 +60,10 @@ class DataDoubletDetectorService
                         $this->logger->info($lowestL);
                     }
                 } else {
-                    throw $this->createNotFoundException('No comparable data provided!');
+                    throw new NotFoundException('No comparable data provided!');
                 }
 
-                if ($avgDissimilarityString > $dissimilarityScoreCutoff) {
+                if ($avgDissimilarityString <= $dissimilarityScoreCutoff) {
                     //TODO: improve response format to include details of single comparison scores
                     // also sort doublets by dissimilarityScore and with that implement a static maximum and a settable maximum/minimum of doublets to be shown
                     // make upper limit of cutoff settable but no higher than 0.4 e.g.

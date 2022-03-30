@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Model\DoubletDetectableInterface;
+use App\Model\MergeableInterface;
 use App\Model\NormalizableInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
@@ -13,7 +14,7 @@ use Symfony\Component\Serializer\Annotation\Ignore;
  * @ORM\Table(name="cdb_person", uniqueConstraints={@ORM\UniqueConstraint(name="guid", columns={"guid"})})
  * @ORM\Entity(repositoryClass="App\Repository\CdbPersonRepository")
  */
-class CdbPerson implements NormalizableInterface, DoubletDetectableInterface
+class CdbPerson implements NormalizableInterface, DoubletDetectableInterface, MergeableInterface
 {
     /**
      * @var int
@@ -756,5 +757,23 @@ class CdbPerson implements NormalizableInterface, DoubletDetectableInterface
     public function getVarsToDoubletDetect()
     {
         return get_object_vars($this);
+    }
+
+    /**
+     * @Ignore
+     */
+    public function getVarsToMerge()
+    {
+        return get_object_vars($this);
+    }
+
+    /**
+     * @Ignore
+     */
+    public function setMergedVars($mergedVarsMap)
+    {
+        foreach ($mergedVarsMap as $objectVar => $objectVarVal) {
+            $this->{$objectVar} = $objectVarVal;
+        }
     }
 }

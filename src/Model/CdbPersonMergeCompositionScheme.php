@@ -9,10 +9,10 @@ use OpenApi\Annotations as OA;
 /**
  *         @OA\Schema (
  *              type="object",
- *              required={"id"}
+ *              required={"id", "guid", "name", "vorname", "spitzname", "activeYn", "password", "loginstr", "lastlogin", "loginerrorcount", "acceptedsecurity", "geschlechtNo", "titel", "strasse", "plz", "ort", "land", "zusatz", "telefonprivat", "telefongeschaeftlich", "telefonhandy", "fax", "email", "geolat", "geolng", "geolatLoose", "geolngLoose", "cmsuserid", "archivYn", "optigemNr", "datasecuritymailDate", "privacyPolicyAgreementDate", "privacyPolicyAgreementTypeId", "privacyPolicyAgreementWhoId", "createdate", "letzteaenderung", "aenderunguser", "isSystemUser"}
  *         )
  */
-class CdbPersonMergeCompositionScheme
+class CdbPersonMergeCompositionScheme extends AbstractMergeCompositionScheme
 {
     /**
      * @var int
@@ -392,5 +392,271 @@ class CdbPersonMergeCompositionScheme
     public function getIsSystemUser()
     {
         return $this->isSystemUser;
+    }
+
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    public function setGuid($guid)
+    {
+        $this->guid = $guid;
+
+        return $this;
+    }
+
+    public function setName($name)
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    public function setVorname($vorname)
+    {
+        $this->vorname = $vorname;
+
+        return $this;
+    }
+
+    public function setSpitzname($spitzname)
+    {
+        $this->spitzname = $spitzname;
+
+        return $this;
+    }
+
+    public function setActiveYn($activeYn)
+    {
+        $this->activeYn = $activeYn;
+
+        return $this;
+    }
+
+    public function setPassword($password)
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    public function setLoginstr($loginstr)
+    {
+        $this->loginstr = $loginstr;
+
+        return $this;
+    }
+
+    public function setLastlogin($lastlogin)
+    {
+        $this->lastlogin = $lastlogin;
+
+        return $this;
+    }
+
+    public function setLoginerrorcount($loginerrorcount)
+    {
+        $this->loginerrorcount = $loginerrorcount;
+
+        return $this;
+    }
+
+    public function setAcceptedsecurity($acceptedsecurity)
+    {
+        $this->acceptedsecurity = $acceptedsecurity;
+
+        return $this;
+    }
+
+    public function setGeschlechtNo($geschlechtNo)
+    {
+        $this->geschlechtNo = $geschlechtNo;
+
+        return $this;
+    }
+
+    public function setTitel($titel)
+    {
+        $this->titel = $titel;
+
+        return $this;
+    }
+
+    public function setStrasse($strasse)
+    {
+        $this->strasse = $strasse;
+
+        return $this;
+    }
+
+    public function setPlz($plz)
+    {
+        $this->plz = $plz;
+
+        return $this;
+    }
+
+    public function setOrt($ort)
+    {
+        $this->ort = $ort;
+
+        return $this;
+    }
+
+    public function setLand($land)
+    {
+        $this->land = $land;
+
+        return $this;
+    }
+
+    public function setZusatz($zusatz)
+    {
+        $this->zusatz = $zusatz;
+
+        return $this;
+    }
+
+    public function setTelefonprivat($telefonprivat)
+    {
+        $this->telefonprivat = $telefonprivat;
+
+        return $this;
+    }
+
+    public function setTelefongeschaeftlich($telefongeschaeftlich)
+    {
+        $this->telefongeschaeftlich = $telefongeschaeftlich;
+
+        return $this;
+    }
+
+    public function setTelefonhandy($telefonhandy)
+    {
+        $this->telefonhandy = $telefonhandy;
+
+        return $this;
+    }
+
+    public function setFax($fax)
+    {
+        $this->fax = $fax;
+
+        return $this;
+    }
+
+    public function setEmail($email)
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    public function setGeolat($geolat)
+    {
+        $this->geolat = $geolat;
+
+        return $this;
+    }
+
+    public function setGeolng($geolng)
+    {
+        $this->geolng = $geolng;
+
+        return $this;
+    }
+
+    public function setGeolatLoose($geolatLoose)
+    {
+        $this->geolatLoose = $geolatLoose;
+
+        return $this;
+    }
+
+    public function setGeolngLoose($geolngLoose)
+    {
+        $this->geolngLoose = $geolngLoose;
+
+        return $this;
+    }
+
+    public function setCmsuserid($cmsuserid)
+    {
+        $this->cmsuserid = $cmsuserid;
+
+        return $this;
+    }
+
+    public function setArchivYn($archivYn)
+    {
+        $this->archivYn = $archivYn;
+
+        return $this;
+    }
+
+    public function setOptigemNr($optigemNr)
+    {
+        $this->optigemNr = $optigemNr;
+
+        return $this;
+    }
+
+    public function setDatasecuritymailDate($datasecuritymailDate)
+    {
+        $this->datasecuritymailDate = $datasecuritymailDate;
+
+        return $this;
+    }
+
+    public function setPrivacyPolicyAgreementDate($privacyPolicyAgreementDate)
+    {
+        $this->privacyPolicyAgreementDate = $privacyPolicyAgreementDate;
+
+        return $this;
+    }
+
+    public function setPrivacyPolicyAgreementTypeId($privacyPolicyAgreementTypeId)
+    {
+        $this->privacyPolicyAgreementTypeId = $privacyPolicyAgreementTypeId;
+
+        return $this;
+    }
+
+    public function setPrivacyPolicyAgreementWhoId($privacyPolicyAgreementWhoId)
+    {
+        $this->privacyPolicyAgreementWhoId = $privacyPolicyAgreementWhoId;
+
+        return $this;
+    }
+
+    public function setCreatedate($createdate)
+    {
+        $this->createdate = $createdate;
+
+        return $this;
+    }
+
+    public function setLetzteaenderung($letzteaenderung)
+    {
+        $this->letzteaenderung = $letzteaenderung;
+
+        return $this;
+    }
+
+    public function setAenderunguser($aenderunguser)
+    {
+        $this->aenderunguser = $aenderunguser;
+
+        return $this;
+    }
+
+    public function setIsSystemUser($isSystemUser)
+    {
+        $this->isSystemUser = $isSystemUser;
+
+        return $this;
     }
 }

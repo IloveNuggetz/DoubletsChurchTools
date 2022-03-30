@@ -2,83 +2,86 @@
 
 namespace App\Service;
 
-use App\Entity\CdbPerson;
+use App\Model\AbstractMergeCompositionScheme;
 use App\Repository\CdbGemeindepersonRepository;
 use App\Repository\CdbPersonRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class DoubletsService
 {
     private $gemeindepersonRepo;
     private $personRepo;
-    private $dns;
-    private $ddds;
+    private $ns;
+    private $dds;
     private $logger;
     private $em;
 
-    public function __construct(CdbGemeindepersonRepository $gemeindepersonRepo, CdbPersonRepository $personRepo, DataNormalizationService $dns, DataDoubletDetectorService $ddds, LoggerInterface $logger, EntityManagerInterface $em)
+    public function __construct(CdbGemeindepersonRepository $gemeindepersonRepo, CdbPersonRepository $personRepo, NormalizationService $ns, DoubletDetectorService $dds, LoggerInterface $logger, EntityManagerInterface $em)
     {
         $this->gemeindepersonRepo = $gemeindepersonRepo;
         $this->personRepo = $personRepo;
-        $this->dns = $dns;
-        $this->ddds = $ddds;
+        $this->ns = $ns;
+        $this->dds = $dds;
         $this->logger = $logger;
         $this->em = $em;
+        $this->doublets = [];
     }
 
-    public function getExistingDoublets()
+    public function getDoublets($class)
     {
         //TODO: only re-search doublets if DB has changed
 
         $logger = $this->logger;
-        $gemeindepersonRepo = $this->gemeindepersonRepo;
-        $dns = $this->dns;
-        $ddds = $this->ddds;
+        $ns = $this->ns;
+        $dds = $this->dds;
+        $em = $this->em;
 
-        $gemeindepersons = $gemeindepersonRepo->findAll();
+        $repository = $em->getRepository($class);
 
-        foreach ($gemeindepersons as $gemeindeperson) {
-            $gemeindeperson = $this->normalizeGemeindeperson($gemeindeperson, $logger, $dns);
+        $objects = $repository->findAll();
+
+        foreach ($objects as $object) {
+            $object = $this->normalizeGemeindeperson($object, $logger, $ns);
         }
 
-        $gemeindepersonDoublets = $this->ddds->detectDoublets($gemeindepersons, 0.15, ['Length-Normalized-Levenshtein-distance', 'Other doublet paradigms'], ['Semantical weighting', 'Possibly semantic domaindriven rules here']);
+        $objectsDoublets = $this->dds->detectDoublets($objects, 0.15, ['Length-Normalized-Levenshtein-distance', 'Other doublet paradigms'], ['Semantical weighting', 'Possibly semantic domaindriven rules here']);
 
-        $doublets = ['Gemeindepersons' => $gemeindepersonDoublets];
-
-        return $doublets;
+        return $objectsDoublets;
     }
 
-    public function normalizeGemeindeperson($gemeindeperson, $logger, $dns)
+    //TODO: create normalizer service and outsource to it
+    public function normalizeGemeindeperson($gemeindeperson, $logger, $ns)
     {
-        $gemeindeperson = $this->normalizeStrings($gemeindeperson, $logger, $dns);
+        $gemeindeperson = $this->normalizeStrings($gemeindeperson, $logger, $ns);
 
         $person = $gemeindeperson->getPerson();
-        $person = $this->normalizePerson($person, $logger, $dns);
+        $person = $this->normalizePerson($person, $logger, $ns);
         $gemeindeperson->setPerson($person);
 
         return $gemeindeperson;
     }
 
-    public function normalizePerson($person, $logger, $dns)
+    public function normalizePerson($person, $logger, $ns)
     {
-        $person = $this->normalizeStrings($person, $logger, $dns);
+        $person = $this->normalizeStrings($person, $logger, $ns);
 
         $strasse = $person->getStrasse();
-        $strasse = $dns->normalizeLexical($strasse, $logger);
+        $strasse = $ns->normalizeLexical($strasse, $logger);
         $person->setStrasse($strasse);
 
         return $person;
     }
 
     //TODO: Could also normalize dates and maybe mobile numbers
-    public function normalizeStrings($object, $logger, $dns)
+    public function normalizeStrings($object, $logger, $ns)
     {
         $objectVarsMap = $object->getVarsToNormalize();
 
         foreach ($objectVarsMap as $objectVar => $objectVarVal) {
             if (is_string($objectVarVal)) {
-                $objectVarVal = $dns->normalizeCharacters($objectVarVal, $logger);
+                $objectVarVal = $ns->normalizeCharacters($objectVarVal, $logger);
                 $objectVarsMap[$objectVar] = $objectVarVal;
             }
         }
@@ -88,20 +91,98 @@ class DoubletsService
         return $object;
     }
 
-    public function mergePersons($mergeRequest): CdbPerson
+    public function mergeEntities($mergeRequest, $class)
+    {
+        $doubletsResult = $this->getDoublets($class);
+
+        $firstId = $mergeRequest->getFirstId();
+        $secondId = $mergeRequest->getSecondId();
+        $isValid = $this->isValidMerge($firstId, $secondId, $doubletsResult->getDoublets());
+
+        if (!$isValid) {
+            throw new BadRequestHttpException('The given ids are not applicable for merging!');
+        } else {
+            $objectsData = $doubletsResult->getObjectsData();
+            $entitiesToMerge = [$firstId => $objectsData[$firstId]->getVarsToMerge(), $secondId => $objectsData[$secondId]->getVarsToMerge()];
+
+            $mergedObjectEntity = $this->buildMergedEntity($entitiesToMerge, $mergeRequest->getMergeScheme());
+            //$mergedPersistedEntity = $this->executePersistenceMerge();
+        }
+
+        return $mergedObjectEntity;
+    }
+
+    public function isValidMerge($firstId, $secondId, $doubletsArrayArray)
+    {
+        $isValid = false;
+        //TODO: after redoing the doublet response format this would be just searching all doublet objects for ids. this is not nice.
+        //replace index referencing in doublets to id referencing then.
+        foreach ($doubletsArrayArray as $baseObjectId => $referenceObjectIds) {
+            if (!$isValid) {
+                foreach ($referenceObjectIds as $referenceObjectId => $doublet) {
+                    $firstIdDoublet = $doublet->getBaseObjectIndex();
+                    $secondIdDoublet = $doublet->getReferenceObjectIndex();
+                    if (($firstId == $firstIdDoublet && $secondId == $secondIdDoublet) || ($secondId == $firstIdDoublet && $firstId == $secondIdDoublet)) {
+                        $isValid = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $isValid;
+    }
+
+    public function buildMergedEntity($entitiesToMerge, $mergeScheme)
+    {
+        $reflect = new \ReflectionClass($mergeScheme);
+        $attributes = $reflect->getProperties();
+
+        $schemeVars = $attributes;
+
+        $mergedEntityVars = [];
+
+        foreach ($schemeVars as $idValueToKeep) {
+            $idValueToKeep->setAccessible(true);
+            $varName = $idValueToKeep->getName();
+
+            $idValueToKeep = $idValueToKeep->getValue($mergeScheme);
+
+            $this->logger->info($varName);
+
+            $valueToKeep = $this->getValueToKeep($varName, $idValueToKeep, $entitiesToMerge);
+            $mergedEntityVars[$varName] = $valueToKeep;
+        }
+
+        $class = "App\Entity\\".strstr($reflect->getShortName(), 'MergeCompositionScheme', true);
+        $mergedObjectEntity = new $class();
+        $mergedObjectEntity->setMergedVars($mergedEntityVars);
+
+        return $mergedObjectEntity;
+    }
+
+    public function getValueToKeep($varName, $idValueToKeep, $entitiesToMerge)
+    {
+        if (is_int($idValueToKeep) && array_key_exists($idValueToKeep, $entitiesToMerge)) {
+            $valueToKeep = $entitiesToMerge[$idValueToKeep][$varName];
+        } elseif ($idValueToKeep instanceof AbstractMergeCompositionScheme) {
+            $nestedEntitiesToMerge = [];
+            foreach ($entitiesToMerge as $id => $entityVarVals) {
+                $nestedEntitiesToMerge[$id] = $entityVarVals[$varName]->getVarsToMerge();
+            }
+            $valueToKeep = $this->buildMergedEntity($nestedEntitiesToMerge, $idValueToKeep);
+        } else {
+            $this->logger->info($idValueToKeep);
+            throw new BadRequestHttpException('Invalid request body: Merge scheme Ids need to match Id of merged entities!');
+        }
+
+        return $valueToKeep;
+    }
+
+    public function executePersistenceMerge($firstIdToRemove, $secondIdToRemove, $newFusionedEntity)
     {
         $personRepo = $this->personRepo;
         $em = $this->em;
-
-        //Check if ids are valid for merge
-        $validForMerge = true;
-
-        if (!$validForMerge) {
-            throw $this->createNotFoundException('The given ids are not applicable for merging!');
-        }
-
-        $newFusionedEntity = new CdbPerson();
-        $newFusionedEntity->setName('George');
 
         $person = $personRepo->findOneBy(['id' => $mergeRequest->getFirstId()]);
         $person2 = $personRepo->findOneBy(['id' => $mergeRequest->getSecondId()]);
@@ -114,7 +195,5 @@ class DoubletsService
             $em->persist($newFusionedEntity);
         });
         */
-
-        return $newFusionedEntity;
     }
 }

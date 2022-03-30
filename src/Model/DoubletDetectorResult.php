@@ -8,8 +8,9 @@ use OpenApi\Annotations as OA;
 class DoubletDetectorResult
 {
     /**
-     * @OA\Property(property="doublets", description="Array of possible doublets", type="array",
-     *      @OA\Items(ref=@Model(type=Doublet::class))
+     * @OA\Property(property="doublets", description="All comparison pairs sorted by BaseObject index", type="array",
+     *      @OA\Items(type="array", description="All comparison partners from one BaseObject index x sorted by ReferenceObject index",
+     *      @OA\Items(ref=@Model(type=Doublet::class), description="The Doublet of BaseObject x and ReferenceObject y"))
      *)
      */
     private $doublets;

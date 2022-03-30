@@ -11,14 +11,11 @@
                 "operationId": "get_doublets",
                 "responses": {
                     "200": {
-                        "description": "Returns all recognized person doublets",
+                        "description": "Returns all recognized CdbGemeindeperson doublets",
                         "content": {
                             "application\/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#\/components\/schemas\/DoubletDetectorResult"
-                                    }
+                                    "$ref": "#\/components\/schemas\/DoubletDetectorResult"
                                 }
                             }
                         }
@@ -41,7 +38,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Returns resulting fused person",
+                        "description": "Returns resulting CdbGemeindeperson",
                         "content": {
                             "application\/json": {
                                 "schema": {
@@ -53,8 +50,8 @@
                     "404": {
                         "description": "The given ids are not applicable for merging!"
                     },
-                    "400": {
-                        "description": "Invalid request body"
+                    "500": {
+                        "description": "Body does not match schema!"
                     }
                 }
             }
@@ -65,10 +62,14 @@
             "DoubletDetectorResult": {
                 "properties": {
                     "doublets": {
-                        "description": "Array of possible doublets",
+                        "description": "All comparison pairs sorted by BaseObject index",
                         "type": "array",
                         "items": {
-                            "$ref": "#\/components\/schemas\/Doublet"
+                            "description": "All comparison partners from one BaseObject index x sorted by ReferenceObject index",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#\/components\/schemas\/Doublet"
+                            }
                         }
                     },
                     "objects data": {
@@ -213,21 +214,48 @@
             },
             "Doublet": {
                 "properties": {
+                    "baseObjectIndex": {
+                        "type": "integer"
+                    },
+                    "referenceObjectIndex": {
+                        "type": "integer"
+                    },
                     "reason": {
                         "$ref": "#\/components\/schemas\/DoubletReason"
-                    },
-                    "baseObject": {
-                        "type": "integer"
-                    },
-                    "referenceObject": {
-                        "type": "integer"
                     }
                 },
                 "type": "object"
             },
             "CdbGemeindepersonMergeCompositionScheme": {
                 "required": [
-                    "id"
+                    "id",
+                    "person",
+                    "beruf",
+                    "geburtsname",
+                    "geburtsdatum",
+                    "geburtsort",
+                    "nationalitaet",
+                    "nationalitaetId",
+                    "familienstandNo",
+                    "hochzeitsdatum",
+                    "station",
+                    "status",
+                    "erstkontakt",
+                    "zugehoerig",
+                    "eintrittsdatum",
+                    "austrittsgrund",
+                    "austrittsdatum",
+                    "taufdatum",
+                    "taufort",
+                    "getauftdurch",
+                    "ueberwiesenvon",
+                    "ueberwiesennach",
+                    "imageurl",
+                    "familyimageurl",
+                    "growpathId",
+                    "letzteaenderung",
+                    "aenderunguser",
+                    "gev"
                 ],
                 "properties": {
                     "id": {
@@ -490,7 +518,44 @@
             },
             "CdbPersonMergeCompositionScheme": {
                 "required": [
-                    "id"
+                    "id",
+                    "guid",
+                    "name",
+                    "vorname",
+                    "spitzname",
+                    "activeYn",
+                    "password",
+                    "loginstr",
+                    "lastlogin",
+                    "loginerrorcount",
+                    "acceptedsecurity",
+                    "geschlechtNo",
+                    "titel",
+                    "strasse",
+                    "plz",
+                    "ort",
+                    "land",
+                    "zusatz",
+                    "telefonprivat",
+                    "telefongeschaeftlich",
+                    "telefonhandy",
+                    "fax",
+                    "email",
+                    "geolat",
+                    "geolng",
+                    "geolatLoose",
+                    "geolngLoose",
+                    "cmsuserid",
+                    "archivYn",
+                    "optigemNr",
+                    "datasecuritymailDate",
+                    "privacyPolicyAgreementDate",
+                    "privacyPolicyAgreementTypeId",
+                    "privacyPolicyAgreementWhoId",
+                    "createdate",
+                    "letzteaenderung",
+                    "aenderunguser",
+                    "isSystemUser"
                 ],
                 "properties": {
                     "id": {
