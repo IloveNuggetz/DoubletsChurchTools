@@ -5,6 +5,12 @@
         "description": "Example Api for searching and merging doublet datasets",
         "version": "1.0.0"
     },
+    "servers": [
+        {
+            "url": "localhost:8000",
+            "description": "API over HTTP"
+        }
+    ],
     "paths": {
         "\/api\/doublets": {
             "get": {
@@ -228,7 +234,6 @@
             },
             "CdbGemeindepersonMergeCompositionScheme": {
                 "required": [
-                    "id",
                     "person",
                     "beruf",
                     "geburtsname",
@@ -258,9 +263,6 @@
                     "gev"
                 ],
                 "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
                     "beruf": {
                         "type": "integer"
                     },
@@ -518,7 +520,6 @@
             },
             "CdbPersonMergeCompositionScheme": {
                 "required": [
-                    "id",
                     "guid",
                     "name",
                     "vorname",
@@ -558,9 +559,6 @@
                     "isSystemUser"
                 ],
                 "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
                     "guid": {
                         "type": "integer"
                     },

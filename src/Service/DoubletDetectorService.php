@@ -18,22 +18,19 @@ class DoubletDetectorService
         $this->logger = $logger;
     }
 
-    public function detectDoublets($objectsDataSet, $dissimilarityScoreCutoff, $paradigmsToApply, $semanticRulesToApply)
+    public function detectDoublets($objectsDataSet, $dissimilarityScoreCutoff, $paradigmsToApply, $semanticRulesToApply, $naturalIndex)
     {
         set_time_limit(60);
 
         $doubletsRelevantResults = [];
         $originalInputRelevantResults = [];
 
-        $highestL = 0;
-        $lowestL = 1;
-
-        for ($currentObjectIndex = 0; $currentObjectIndex < count($objectsDataSet); ++$currentObjectIndex) {
-            $objectData = $objectsDataSet[$currentObjectIndex];
+        for ($baseObjectIndex = 0; $baseObjectIndex < count($objectsDataSet); ++$baseObjectIndex) {
+            $objectData = $objectsDataSet[$baseObjectIndex];
             $objectVarsMap = $objectData->getVarsToDoubletDetect();
 
-            for ($i = $currentObjectIndex + 1; $i < count($objectsDataSet); ++$i) {
-                $referenceObjectData = $objectsDataSet[$i];
+            for ($referenceObjectIndex = $baseObjectIndex + 1; $referenceObjectIndex < count($objectsDataSet); ++$referenceObjectIndex) {
+                $referenceObjectData = $objectsDataSet[$referenceObjectIndex];
                 $referenceObjectVarMap = $referenceObjectData->getVarsToDoubletDetect();
 
                 $cumulatedDissimilarityResult = $this->calcCumulatedDissimilarityScore($objectVarsMap, $referenceObjectVarMap);
@@ -51,26 +48,25 @@ class DoubletDetectorService
                     //TODO: make weighting optional setting
                     $avgDissimilarityString = $avgDissimilarityString * ($stringsComparedCount / $cumulatedWeightFactor);
 
-                    if ($highestL < $avgDissimilarityString) {
-                        $highestL = $avgDissimilarityString;
-                        //$this->logger->info($highestL);
-                    }
-                    if ($lowestL > $avgDissimilarityString) {
-                        $lowestL = $avgDissimilarityString;
-                        $this->logger->info($lowestL);
-                    }
                 } else {
                     throw new NotFoundException('No comparable data provided!');
                 }
 
                 if ($avgDissimilarityString <= $dissimilarityScoreCutoff) {
+                    $doubletResultBaseIndex = $baseObjectIndex;
+                    $doubletResultReferenceIndex = $referenceObjectIndex;
+
+                    if($naturalIndex != null) {
+                        $doubletResultBaseIndex = $objectVarsMap[$naturalIndex];
+                        $doubletResultReferenceIndex = $referenceObjectVarMap[$naturalIndex];
+                    }
                     //TODO: improve response format to include details of single comparison scores
                     // also sort doublets by dissimilarityScore and with that implement a static maximum and a settable maximum/minimum of doublets to be shown
                     // make upper limit of cutoff settable but no higher than 0.4 e.g.
-                    $currentPotentialDoublet = new Doublet($currentObjectIndex, $i, new DoubletReason($avgDissimilarityString, $paradigmsToApply, $semanticRulesToApply, ['Levenshtein' => $cumulatedLevenshteinScore, 'Weight' => $cumulatedWeightFactor, 'StringsCompared' => $stringsComparedCount]));
-                    $doubletsRelevantResults[$currentObjectIndex][$i] = $currentPotentialDoublet;
-                    $originalInputRelevantResults[$currentObjectIndex] = $objectsDataSet[$currentObjectIndex];
-                    $originalInputRelevantResults[$i] = $objectsDataSet[$i];
+                    $currentPotentialDoublet = new Doublet($doubletResultBaseIndex, $doubletResultReferenceIndex, new DoubletReason($avgDissimilarityString, $paradigmsToApply, $semanticRulesToApply, ['Levenshtein' => $cumulatedLevenshteinScore, 'Weight' => $cumulatedWeightFactor, 'StringsCompared' => $stringsComparedCount]));
+                    $doubletsRelevantResults[$doubletResultBaseIndex][$doubletResultReferenceIndex] = $currentPotentialDoublet;
+                    $originalInputRelevantResults[$doubletResultBaseIndex] = $objectsDataSet[$baseObjectIndex];
+                    $originalInputRelevantResults[$doubletResultReferenceIndex] = $objectsDataSet[$referenceObjectIndex];
                 }
             }
         }
@@ -111,6 +107,7 @@ class DoubletDetectorService
                 $cumulatedLevenshteinScore = $cumulatedLevenshteinScore + $levenshteinScore;
                 $cumulatedWeightFactor = $cumulatedWeightFactor + $weightFactor;
                 ++$stringsComparedCount;
+
             } elseif ($objectVarVal instanceof DoubletDetectableInterface) {
                 $referenceObjectVarVal = $referenceObjectVarMap[$objectVar];
                 $nestedObjectResult = $this->calcCumulatedDissimilarityScore($objectVarVal->getVarsToDoubletDetect(), $referenceObjectVarVal->getVarsToDoubletDetect());
@@ -119,6 +116,10 @@ class DoubletDetectorService
                 $cumulatedLevenshteinScore = $cumulatedLevenshteinScore + $nestedObjectResult->getCumulatedLevenshteinScore();
                 $cumulatedWeightFactor = $cumulatedWeightFactor + $nestedObjectResult->getCumulatedWeightFactor();
                 $stringsComparedCount = $stringsComparedCount + $nestedObjectResult->getStringsComparedCount();
+            }
+            else {
+                //TODO: Here we could provide more info for result or throw error (only provide compatible variable types)
+                //Logging would boil the console
             }
         }
 

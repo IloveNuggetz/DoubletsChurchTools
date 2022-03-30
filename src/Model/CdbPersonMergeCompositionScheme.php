@@ -9,15 +9,11 @@ use OpenApi\Annotations as OA;
 /**
  *         @OA\Schema (
  *              type="object",
- *              required={"id", "guid", "name", "vorname", "spitzname", "activeYn", "password", "loginstr", "lastlogin", "loginerrorcount", "acceptedsecurity", "geschlechtNo", "titel", "strasse", "plz", "ort", "land", "zusatz", "telefonprivat", "telefongeschaeftlich", "telefonhandy", "fax", "email", "geolat", "geolng", "geolatLoose", "geolngLoose", "cmsuserid", "archivYn", "optigemNr", "datasecuritymailDate", "privacyPolicyAgreementDate", "privacyPolicyAgreementTypeId", "privacyPolicyAgreementWhoId", "createdate", "letzteaenderung", "aenderunguser", "isSystemUser"}
+ *              required={"guid", "name", "vorname", "spitzname", "activeYn", "password", "loginstr", "lastlogin", "loginerrorcount", "acceptedsecurity", "geschlechtNo", "titel", "strasse", "plz", "ort", "land", "zusatz", "telefonprivat", "telefongeschaeftlich", "telefonhandy", "fax", "email", "geolat", "geolng", "geolatLoose", "geolngLoose", "cmsuserid", "archivYn", "optigemNr", "datasecuritymailDate", "privacyPolicyAgreementDate", "privacyPolicyAgreementTypeId", "privacyPolicyAgreementWhoId", "createdate", "letzteaenderung", "aenderunguser", "isSystemUser"}
  *         )
  */
 class CdbPersonMergeCompositionScheme extends AbstractMergeCompositionScheme
 {
-    /**
-     * @var int
-     */
-    private $id;
 
     /**
      * @var int
@@ -204,10 +200,6 @@ class CdbPersonMergeCompositionScheme extends AbstractMergeCompositionScheme
      */
     private $isSystemUser;
 
-    public function getId()
-    {
-        return $this->id;
-    }
 
     public function getGuid()
     {
@@ -394,12 +386,6 @@ class CdbPersonMergeCompositionScheme extends AbstractMergeCompositionScheme
         return $this->isSystemUser;
     }
 
-    public function setId($id)
-    {
-        $this->id = $id;
-
-        return $this;
-    }
 
     public function setGuid($guid)
     {

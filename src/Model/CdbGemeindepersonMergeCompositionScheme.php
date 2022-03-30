@@ -8,15 +8,11 @@ use OpenApi\Annotations as OA;
 /**
  *         @OA\Schema (
  *              type="object",
- *              required={"id", "person", "beruf", "geburtsname", "geburtsdatum", "geburtsort", "nationalitaet", "nationalitaetId", "familienstandNo", "hochzeitsdatum", "station", "status", "erstkontakt", "zugehoerig", "eintrittsdatum", "austrittsgrund", "austrittsdatum", "taufdatum", "taufort", "getauftdurch", "ueberwiesenvon", "ueberwiesennach", "imageurl", "familyimageurl", "growpathId", "letzteaenderung", "aenderunguser", "gev"}
+ *              required={"person", "beruf", "geburtsname", "geburtsdatum", "geburtsort", "nationalitaet", "nationalitaetId", "familienstandNo", "hochzeitsdatum", "station", "status", "erstkontakt", "zugehoerig", "eintrittsdatum", "austrittsgrund", "austrittsdatum", "taufdatum", "taufort", "getauftdurch", "ueberwiesenvon", "ueberwiesennach", "imageurl", "familyimageurl", "growpathId", "letzteaenderung", "aenderunguser", "gev"}
  *         )
  */
 class CdbGemeindepersonMergeCompositionScheme extends AbstractMergeCompositionScheme
 {
-    /**
-     * @var int
-     */
-    private $id;
 
     /**
      * @var int
@@ -154,10 +150,6 @@ class CdbGemeindepersonMergeCompositionScheme extends AbstractMergeCompositionSc
      */
     private $person;
 
-    public function getId()
-    {
-        return $this->id;
-    }
 
     public function getBeruf()
     {
@@ -294,12 +286,6 @@ class CdbGemeindepersonMergeCompositionScheme extends AbstractMergeCompositionSc
         return $this->person;
     }
 
-    public function setId($id)
-    {
-        $this->id = $id;
-
-        return $this;
-    }
 
     public function setBeruf($beruf)
     {

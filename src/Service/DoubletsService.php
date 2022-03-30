@@ -26,7 +26,6 @@ class DoubletsService
         $this->dds = $dds;
         $this->logger = $logger;
         $this->em = $em;
-        $this->doublets = [];
     }
 
     public function getDoublets($class)
@@ -46,12 +45,12 @@ class DoubletsService
             $object = $this->normalizeGemeindeperson($object, $logger, $ns);
         }
 
-        $objectsDoublets = $this->dds->detectDoublets($objects, 0.15, ['Length-Normalized-Levenshtein-distance', 'Other doublet paradigms'], ['Semantical weighting', 'Possibly semantic domaindriven rules here']);
+        $objectsDoublets = $this->dds->detectDoublets($objects, 0.15, ['Length-Normalized-Levenshtein-distance', 'Other doublet paradigms'], ['Semantical weighting', 'Possibly semantic domaindriven rules here'],"id");
 
         return $objectsDoublets;
     }
 
-    //TODO: create normalizer service and outsource to it
+    //TODO: move to normalizer service and do generalized
     public function normalizeGemeindeperson($gemeindeperson, $logger, $ns)
     {
         $gemeindeperson = $this->normalizeStrings($gemeindeperson, $logger, $ns);
@@ -106,7 +105,7 @@ class DoubletsService
             $entitiesToMerge = [$firstId => $objectsData[$firstId]->getVarsToMerge(), $secondId => $objectsData[$secondId]->getVarsToMerge()];
 
             $mergedObjectEntity = $this->buildMergedEntity($entitiesToMerge, $mergeRequest->getMergeScheme());
-            //$mergedPersistedEntity = $this->executePersistenceMerge();
+            $mergedPersistedEntity = $this->executePersistenceMerge($entitiesToMerge, $mergedObjectEntity);
         }
 
         return $mergedObjectEntity;
@@ -179,21 +178,42 @@ class DoubletsService
         return $valueToKeep;
     }
 
-    public function executePersistenceMerge($firstIdToRemove, $secondIdToRemove, $newFusionedEntity)
+    public function executePersistenceMerge($entitiesToMerge, $mergedObjectEntity)
     {
+        $gemeindepersonRepo = $this->gemeindepersonRepo;
         $personRepo = $this->personRepo;
         $em = $this->em;
 
-        $person = $personRepo->findOneBy(['id' => $mergeRequest->getFirstId()]);
-        $person2 = $personRepo->findOneBy(['id' => $mergeRequest->getSecondId()]);
 
-        /*
-        $em->transactional(function($em) {
-            $em->remove($person);
-            $em->remove($person2);
 
-            $em->persist($newFusionedEntity);
-        });
-        */
+        //TODO: only specific so far, sometime in far future this could be generalized as well
+
+        $em->getConnection()->beginTransaction(); // suspend auto-commit
+        try {
+          foreach($entitiesToMerge as $objectVarsVals){
+                                $id = $objectVarsVals["id"];
+                                $personId = $objectVarsVals["person"]->getVarsToMerge()["id"];
+                                $gemeindeperson = $gemeindepersonRepo->findOneBy(['id' => $id]);
+                                $person = $personRepo->findOneBy(['id' => $personId]);
+
+                                        $em->remove($gemeindeperson);
+                                       $em->remove($person);
+
+            }
+
+            $em->flush();
+
+                                    $em->persist($mergedObjectEntity->getPerson());
+                                    $em->persist($mergedObjectEntity);
+                                    $em->flush();
+            $em->getConnection()->commit();
+
+        } catch (Exception $e) {
+            $em->getConnection()->rollBack();
+            throw $e;
+        }
+
+        return $gemeindepersonRepo->findOneBy(['id' => $mergedObjectEntity->getId()]);
+
     }
 }
