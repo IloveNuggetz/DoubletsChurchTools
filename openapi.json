@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "localhost:8000",
+            "url": "localhost:80",
             "description": "API over HTTP"
         }
     ],
