@@ -145,6 +145,7 @@ class DoubletDetectorService
     public function getSemanticWeightFactor($variableName): float
     {
         //TODO: Use mapping data provided by requesting user to find semantically weightable fields. use enum for weightable logical fields.
+        //also complete this should be important for real usage on any data
         switch ($variableName) {
                         /*
                         case "beruf": $weightFactor = 200000;break;

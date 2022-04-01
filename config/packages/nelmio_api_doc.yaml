@@ -1,7 +1,7 @@
 nelmio_api_doc:
     documentation:
         servers:
-            - url: localhost:8000
+            - url: localhost:80
               description: API over HTTP
         info:
             title: DoubletsChurchTools
