@@ -14,7 +14,6 @@ use OpenApi\Annotations as OA;
  */
 class CdbPersonMergeCompositionScheme extends AbstractMergeCompositionScheme
 {
-
     /**
      * @var int
      */
@@ -200,7 +199,6 @@ class CdbPersonMergeCompositionScheme extends AbstractMergeCompositionScheme
      */
     private $isSystemUser;
 
-
     public function getGuid()
     {
         return $this->guid;
@@ -385,7 +383,6 @@ class CdbPersonMergeCompositionScheme extends AbstractMergeCompositionScheme
     {
         return $this->isSystemUser;
     }
-
 
     public function setGuid($guid)
     {

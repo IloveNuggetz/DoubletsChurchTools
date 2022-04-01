@@ -45,7 +45,7 @@ class DoubletsService
             $object = $this->normalizeGemeindeperson($object, $logger, $ns);
         }
 
-        $objectsDoublets = $this->dds->detectDoublets($objects, 0.15, ['Length-Normalized-Levenshtein-distance', 'Other doublet paradigms'], ['Semantical weighting', 'Possibly semantic domaindriven rules here'],"id");
+        $objectsDoublets = $this->dds->detectDoublets($objects, 0.15, ['Length-Normalized-Levenshtein-distance', 'Other doublet paradigms'], ['Semantical weighting', 'Possibly semantic domaindriven rules here'], 'id');
 
         return $objectsDoublets;
     }
@@ -184,36 +184,31 @@ class DoubletsService
         $personRepo = $this->personRepo;
         $em = $this->em;
 
-
-
         //TODO: only specific so far, sometime in far future this could be generalized as well
 
         $em->getConnection()->beginTransaction(); // suspend auto-commit
         try {
-          foreach($entitiesToMerge as $objectVarsVals){
-                                $id = $objectVarsVals["id"];
-                                $personId = $objectVarsVals["person"]->getVarsToMerge()["id"];
-                                $gemeindeperson = $gemeindepersonRepo->findOneBy(['id' => $id]);
-                                $person = $personRepo->findOneBy(['id' => $personId]);
+            foreach ($entitiesToMerge as $objectVarsVals) {
+                $id = $objectVarsVals['id'];
+                $personId = $objectVarsVals['person']->getVarsToMerge()['id'];
+                $gemeindeperson = $gemeindepersonRepo->findOneBy(['id' => $id]);
+                $person = $personRepo->findOneBy(['id' => $personId]);
 
-                                        $em->remove($gemeindeperson);
-                                       $em->remove($person);
-
+                $em->remove($gemeindeperson);
+                $em->remove($person);
             }
 
             $em->flush();
 
-                                    $em->persist($mergedObjectEntity->getPerson());
-                                    $em->persist($mergedObjectEntity);
-                                    $em->flush();
+            $em->persist($mergedObjectEntity->getPerson());
+            $em->persist($mergedObjectEntity);
+            $em->flush();
             $em->getConnection()->commit();
-
         } catch (Exception $e) {
             $em->getConnection()->rollBack();
             throw $e;
         }
 
         return $gemeindepersonRepo->findOneBy(['id' => $mergedObjectEntity->getId()]);
-
     }
 }

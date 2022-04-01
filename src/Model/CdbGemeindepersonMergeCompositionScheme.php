@@ -13,7 +13,6 @@ use OpenApi\Annotations as OA;
  */
 class CdbGemeindepersonMergeCompositionScheme extends AbstractMergeCompositionScheme
 {
-
     /**
      * @var int
      */
@@ -150,7 +149,6 @@ class CdbGemeindepersonMergeCompositionScheme extends AbstractMergeCompositionSc
      */
     private $person;
 
-
     public function getBeruf()
     {
         return $this->beruf;
@@ -285,7 +283,6 @@ class CdbGemeindepersonMergeCompositionScheme extends AbstractMergeCompositionSc
     {
         return $this->person;
     }
-
 
     public function setBeruf($beruf)
     {
