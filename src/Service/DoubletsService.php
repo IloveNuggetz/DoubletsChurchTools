@@ -153,6 +153,7 @@ class DoubletsService
             $mergedEntityVars[$varName] = $valueToKeep;
         }
 
+        //Get class of entity that merge scheme is meant to merge
         $class = "App\Entity\\".strstr($reflect->getShortName(), 'MergeCompositionScheme', true);
         $mergedObjectEntity = new $class();
         $mergedObjectEntity->setMergedVars($mergedEntityVars);
@@ -171,8 +172,7 @@ class DoubletsService
             }
             $valueToKeep = $this->buildMergedEntity($nestedEntitiesToMerge, $idValueToKeep);
         } else {
-            $this->logger->info($idValueToKeep);
-            throw new BadRequestHttpException('Invalid request body: Merge scheme Ids need to match Id of merged entities!');
+            throw new BadRequestHttpException('Invalid request body: Merge scheme Ids need to match Id of entities to merge!');
         }
 
         return $valueToKeep;

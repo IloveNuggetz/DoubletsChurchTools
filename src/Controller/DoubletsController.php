@@ -77,8 +77,6 @@ class DoubletsController extends AbstractController
         $logger = $this->logger;
         $ds = $this->ds;
 
-        //$logger->info($request->getContent());
-
         $this->validate($request);
         $serializer = $this->container->get('serializer');
         $mergeRequest = $serializer->deserialize($request->getContent(), CdbGemeindepersonMergeRequest::class, 'json');
